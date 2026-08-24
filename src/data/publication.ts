@@ -1,4 +1,6 @@
 import { publicationMetadataSchema, type PublicationMetadata } from '../../shared/schemas';
+import { listingSchema } from '../../shared/schemas';
+import type { Listing } from '../../shared/domain';
 export type { PublicationMetadata } from '../../shared/schemas';
 
 export const SUPPORTED_PUBLICATION_SCHEMA_VERSION = 1;
@@ -35,5 +37,12 @@ export async function loadMetadata(fetcher: typeof fetch = fetch): Promise<Publi
     throw new PublicationError(
       `資料版本不相容：預期 schemaVersion ${SUPPORTED_PUBLICATION_SCHEMA_VERSION}，實際為 ${parsed.data.schemaVersion}。`,
     );
+  return parsed.data;
+}
+export async function loadListings(fetcher: typeof fetch = fetch): Promise<Listing[]> {
+  const response = await fetcher(publicationUrl('listings/all.json'));
+  if (!response.ok) throw new PublicationError(`房源資料無法取得（HTTP ${response.status}）。`);
+  const parsed = listingSchema.array().safeParse(await response.json());
+  if (!parsed.success) throw new PublicationError('房源資料結構無效。');
   return parsed.data;
 }

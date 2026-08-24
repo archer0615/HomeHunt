@@ -12,6 +12,28 @@ const metadata = {
   counts: { listings: 1, priceHistory: 0, listingEvents: 0, transactions: 0 },
   sources: [],
 };
+const listings = [
+  {
+    id: '591-sale:1',
+    sourceId: '591-sale',
+    sourceListingId: '1',
+    listingType: 'USED',
+    status: 'ACTIVE',
+    firstSeenAt: '2026-01-01T00:00:00.000Z',
+    lastSeenAt: '2026-01-01T00:00:00.000Z',
+    lastCheckedAt: '2026-01-01T00:00:00.000Z',
+    relistCount: 0,
+    missingSuccessCount: 0,
+    contentHash: 'x',
+    rawDataHash: 'x',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  },
+];
+const responseFor = (input: RequestInfo | URL) =>
+  new Response(JSON.stringify(String(input).includes('listings') ? listings : metadata), {
+    status: 200,
+  });
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -24,17 +46,18 @@ describe('application shell', () => {
     let resolveFetch: ((response: Response) => void) | undefined;
     vi.stubGlobal(
       'fetch',
-      vi.fn(
-        () =>
-          new Promise<Response>((resolve) => {
-            resolveFetch = resolve;
-          }),
+      vi.fn((input: RequestInfo | URL) =>
+        String(input).includes('listings')
+          ? Promise.resolve(responseFor(input))
+          : new Promise<Response>((resolve) => {
+              resolveFetch = resolve;
+            }),
       ),
     );
     render(<App />);
     expect(screen.getByText('正在準備 HomeHunt')).toBeTruthy();
-    resolveFetch?.(new Response(JSON.stringify(metadata), { status: 200 }));
-    await waitFor(() => expect(screen.getByText('1 筆房源')).toBeTruthy());
+    resolveFetch?.(responseFor('metadata'));
+    await waitFor(() => expect(screen.getByText('符合 1 筆')).toBeTruthy());
     expect(screen.getByRole('navigation', { name: '主要導覽' })).toBeTruthy();
   });
   it('renders metadata errors instead of a blank page', async () => {
@@ -45,10 +68,7 @@ describe('application shell', () => {
   });
   it('renders a hash route placeholder', async () => {
     window.location.hash = '#/favorites';
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify(metadata), { status: 200 })),
-    );
+    vi.stubGlobal('fetch', vi.fn(responseFor));
     render(<App />);
     expect(await screen.findByRole('heading', { name: '收藏' })).toBeTruthy();
   });

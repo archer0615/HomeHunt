@@ -111,6 +111,57 @@ h3 {
   font-size: 0.8rem;
   text-align: center;
 }
+.search-controls {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #d8e4ed;
+  border-radius: 0.8rem;
+}
+.search-controls label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+.search-controls input,
+.search-controls select {
+  min-height: 2.6rem;
+  padding: 0.45rem;
+  border: 1px solid #aac0d0;
+  border-radius: 0.45rem;
+  background: #fff;
+}
+.search-controls button {
+  min-height: 2.6rem;
+  border: 1px solid #315b7d;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #17324d;
+  cursor: pointer;
+}
+.result-count {
+  font-weight: 700;
+}
+.listing-results {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+.listing-card {
+  padding: 1rem;
+  border: 1px solid #d8e4ed;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.listing-card h3 {
+  margin-bottom: 0.35rem;
+}
+.soft-warning {
+  color: #9a5b00;
+  font-weight: 700;
+}
 @media (min-width: 700px) {
   .app-header {
     align-items: center;
@@ -120,5 +171,9 @@ h3 {
   }
   .main-content {
     padding: 3rem 0;
+  }
+  .search-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
   }
 }
