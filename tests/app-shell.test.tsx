@@ -48,7 +48,7 @@ describe('application shell', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL) =>
-        String(input).includes('listings')
+        !String(input).includes('metadata')
           ? Promise.resolve(responseFor(input))
           : new Promise<Response>((resolve) => {
               resolveFetch = resolve;

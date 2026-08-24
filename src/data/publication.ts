@@ -1,6 +1,7 @@
 import { publicationMetadataSchema, type PublicationMetadata } from '../../shared/schemas';
 import { listingSchema } from '../../shared/schemas';
 import type { Listing } from '../../shared/domain';
+import type { ListingEvent, PriceHistory } from '../../shared/domain';
 export type { PublicationMetadata } from '../../shared/schemas';
 
 export const SUPPORTED_PUBLICATION_SCHEMA_VERSION = 1;
@@ -45,4 +46,23 @@ export async function loadListings(fetcher: typeof fetch = fetch): Promise<Listi
   const parsed = listingSchema.array().safeParse(await response.json());
   if (!parsed.success) throw new PublicationError('房源資料結構無效。');
   return parsed.data;
+}
+async function loadNdjson<T>(resource: string, fetcher: typeof fetch): Promise<T[]> {
+  const response = await fetcher(publicationUrl(resource));
+  if (!response.ok) throw new PublicationError(`公開歷史資料無法取得（HTTP ${response.status}）。`);
+  const text = await response.text();
+  return text
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as T);
+}
+export async function loadListingDetailData(
+  fetcher: typeof fetch = fetch,
+): Promise<{ listings: Listing[]; priceHistory: PriceHistory[]; events: ListingEvent[] }> {
+  const [listings, priceHistory, events] = await Promise.all([
+    loadListings(fetcher),
+    loadNdjson<PriceHistory>('history/price.ndjson', fetcher),
+    loadNdjson<ListingEvent>('history/events.ndjson', fetcher),
+  ]);
+  return { listings, priceHistory, events };
 }

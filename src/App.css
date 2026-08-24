@@ -162,6 +162,83 @@ h3 {
   color: #9a5b00;
   font-weight: 700;
 }
+.detail-page {
+  max-width: 70rem;
+  margin: 0 auto;
+}
+.detail-header {
+  margin: 1rem 0;
+  padding: 1.25rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  border: 1px solid #d8e4ed;
+}
+.detail-header h1 {
+  margin: 0.35rem 0;
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+}
+.detail-price {
+  display: block;
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  color: #137c72;
+}
+.status {
+  font-weight: 700;
+}
+.status-missing {
+  color: #9a5b00;
+}
+.status-delisted {
+  color: #a33;
+}
+.detail-page section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #d8e4ed;
+  border-radius: 0.8rem;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+.detail-grid dt {
+  color: #567087;
+  font-size: 0.85rem;
+}
+.detail-grid dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+.timeline {
+  padding-left: 1.25rem;
+}
+.timeline li {
+  margin: 0.55rem 0;
+}
+.personal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.personal-actions button {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #315b7d;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #17324d;
+  cursor: pointer;
+}
+@media (max-width: 500px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (min-width: 700px) {
   .app-header {
     align-items: center;

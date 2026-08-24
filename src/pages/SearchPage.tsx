@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Listing } from '../../shared/domain';
 import { EmptyState } from '../components/StatusView';
 import { searchListings, warningsFor, type SortOption } from '../search/engine';
@@ -231,7 +231,11 @@ export function SearchPage({ listings }: { listings: Listing[] }) {
                 <p className="eyebrow">
                   {item.listingType} · {item.sourceId}
                 </p>
-                <h3>{item.title ?? '未命名房源'}</h3>
+                <h3>
+                  <Link to={`/listings/${encodeURIComponent(item.id)}`}>
+                    {item.title ?? '未命名房源'}
+                  </Link>
+                </h3>
                 <p>
                   {[item.city, item.district, item.nearestMrtStation].filter(Boolean).join(' · ')}
                 </p>
