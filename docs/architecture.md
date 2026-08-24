@@ -1,0 +1,14 @@
+# Architecture
+
+```mermaid
+flowchart LR
+ S[Data Sources] --> C[Collectors] --> R[Raw Data] --> N[Normalizers] --> V[Validation] --> D[Domain Model] --> Q[(SQLite)] --> E[JSON/NDJSON] --> G[GitHub Pages] --> P[React PWA] --> I[(IndexedDB)]
+```
+
+## Components
+
+Collector 負責 Request、Pagination、Source Parsing、Raw Object；Normalizer 負責清理、Mapping、單位轉換與 Domain Model。Collector 不得直接寫 Listing DB。Validation 後寫 SQLite，輸出 `public/data/metadata.json`、區域 listings JSON、history NDJSON、transactions JSON；SQLite 不直接供 Pages 使用，也不每次 Crawl commit。
+
+前端採 React、Vite、TypeScript、PWA、IndexedDB；GitHub Pages 優先 HashRouter。SQLite 用於 processing、normalization、history、analysis、development；IndexedDB 僅存個人狀態。
+
+GitHub Actions 執行每日 08:20、20:20（Asia/Taipei）增量 Crawl 與每週 Full Reconciliation，提供 Local fallback。來源獨立執行／allSettled，錯誤互不影響。Phase 1 不需 Backend、VPS、Cloud SQL、AWS、Azure；不得繞過 CAPTCHA、登入、Access Control 或封鎖。
