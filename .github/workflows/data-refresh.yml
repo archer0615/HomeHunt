@@ -39,14 +39,7 @@ jobs:
           node --version
           npm --version
       - name: Run data refresh
-        run: |
-          if [ ! -f public/data/metadata.json ]; then
-            echo 'Missing public/data/metadata.json: refusing to publish without known-good state.'
-            exit 1
-          fi
-          mkdir -p data
-          npm run data:hydrate -- --input public/data --db data/canonical.sqlite
-          npm run data:publish -- --db data/canonical.sqlite --output public/data
+        run: npm run data:refresh
       - name: Show publication metadata
         if: success()
         run: node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('public/data/metadata.json','utf8')); console.log(JSON.stringify({appDataVersion:m.appDataVersion,generatedAt:m.generatedAt,counts:m.counts}));"
