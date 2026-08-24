@@ -3,7 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { Listing } from '../shared/domain';
-import { publishData, type PublicationInput } from '../crawler/publication';
+import {
+  publicationInputFromStores,
+  publishData,
+  type PublicationInput,
+} from '../crawler/publication';
+import { ListingLifecycleStore } from '../crawler/lifecycle/store';
+import { createTransactionRepository } from '../crawler/persistence/sqlite';
 
 const listing = (id: string): Listing => ({
   id,
@@ -68,5 +74,16 @@ describe('data publication', () => {
     expect(
       JSON.parse(await readFile(path.join(target, 'listings', 'all.json'), 'utf8')),
     ).toHaveLength(10);
+  });
+
+  it('reads publication input from the canonical SQLite repositories', () => {
+    const lifecycleStore = new ListingLifecycleStore();
+    const transactionRepository = createTransactionRepository();
+    lifecycleStore.saveListing(listing('canonical'));
+    expect(publicationInputFromStores(lifecycleStore, transactionRepository).listings[0]?.id).toBe(
+      'canonical',
+    );
+    lifecycleStore.close();
+    transactionRepository.close();
   });
 });

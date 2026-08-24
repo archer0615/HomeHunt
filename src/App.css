@@ -1,3 +1,124 @@
-:root { font-family: system-ui, sans-serif; color: #1f2937; background: #f8fafc; }
-body { margin: 0; }
-.app-shell { box-sizing: border-box; min-height: 100vh; display: grid; place-content: center; padding: 1.5rem; text-align: center; }
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #17324d;
+  background: #f5f8fb;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button,
+a {
+  font: inherit;
+}
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #17324d;
+  color: #fff;
+}
+.app-header h1 {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.25rem, 4vw, 1.8rem);
+}
+.eyebrow {
+  margin: 0;
+  color: #72d6c9;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+nav {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+nav a {
+  color: #dbe9f4;
+  text-decoration: none;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+}
+nav a:hover,
+nav a:focus-visible,
+nav a.active {
+  background: #315b7d;
+  color: #fff;
+  outline: none;
+}
+.main-content {
+  width: min(100% - 2rem, 72rem);
+  margin: 0 auto;
+  flex: 1;
+  padding: 2rem 0;
+}
+.page-intro {
+  max-width: 42rem;
+}
+h2 {
+  margin: 0.4rem 0 0.75rem;
+  font-size: clamp(1.65rem, 6vw, 2.6rem);
+}
+h3 {
+  margin-top: 0;
+}
+.data-summary,
+.placeholder-panel,
+.status-view {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #d8e4ed;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 5px 18px #17324d0d;
+}
+.data-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.data-summary span {
+  color: #567087;
+  font-size: 0.9rem;
+}
+.status-view {
+  text-align: center;
+}
+.status-view button {
+  border: 0;
+  border-radius: 0.5rem;
+  background: #137c72;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.7rem 1rem;
+}
+.app-footer {
+  padding: 1.25rem;
+  color: #567087;
+  font-size: 0.8rem;
+  text-align: center;
+}
+@media (min-width: 700px) {
+  .app-header {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 1.5rem max(1.5rem, calc((100% - 72rem) / 2));
+  }
+  .main-content {
+    padding: 3rem 0;
+  }
+}

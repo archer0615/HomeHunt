@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Listing, ListingEvent, PriceHistory, Transaction } from '../../shared/domain';
+import type { ListingLifecycleStore } from '../lifecycle/store';
+import type { TransactionRepository } from '../persistence/sqlite';
 import {
   listingEventSchema,
   listingSchema,
@@ -42,6 +44,18 @@ export interface PublicationResult {
   generatedAt: string;
   counts: { listings: number; priceHistory: number; listingEvents: number; transactions: number };
   changed: boolean;
+}
+
+export function publicationInputFromStores(
+  lifecycleStore: ListingLifecycleStore,
+  transactionRepository: TransactionRepository,
+): PublicationInput {
+  return {
+    listings: lifecycleStore.listAll(),
+    priceHistory: lifecycleStore.allHistories(),
+    listingEvents: lifecycleStore.allEvents(),
+    transactions: transactionRepository.listAll(),
+  };
 }
 
 const sortRecords = <T extends Record<string, unknown>>(records: T[], keys: (keyof T)[]) =>

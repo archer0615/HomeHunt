@@ -1,4 +1,37 @@
 import Database from 'better-sqlite3';
 import type { Transaction } from '../../shared/domain';
-export interface TransactionRepository { upsert(transaction: Transaction): void; findById(id: string): Transaction | undefined; count(): number; close(): void; }
-export function createTransactionRepository(filename = ':memory:'): TransactionRepository { const db = new Database(filename); db.exec('PRAGMA user_version = 1; CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, source_id TEXT NOT NULL, payload_json TEXT NOT NULL);'); const upsert = db.prepare('INSERT INTO transactions (id, source_id, payload_json) VALUES (@id, @sourceId, @payload) ON CONFLICT(id) DO UPDATE SET source_id=excluded.source_id, payload_json=excluded.payload_json'); return { upsert: (tx) => { upsert.run({ id: tx.id, sourceId: tx.sourceId, payload: JSON.stringify(tx) }); }, findById: (id) => { const row = db.prepare('SELECT payload_json FROM transactions WHERE id = ?').get(id) as { payload_json: string } | undefined; return row ? JSON.parse(row.payload_json) as Transaction : undefined; }, count: () => (db.prepare('SELECT COUNT(*) as count FROM transactions').get() as { count: number }).count, close: () => db.close() }; }
+export interface TransactionRepository {
+  upsert(transaction: Transaction): void;
+  findById(id: string): Transaction | undefined;
+  listAll(): Transaction[];
+  count(): number;
+  close(): void;
+}
+export function createTransactionRepository(filename = ':memory:'): TransactionRepository {
+  const db = new Database(filename);
+  db.exec(
+    'PRAGMA user_version = 1; CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, source_id TEXT NOT NULL, payload_json TEXT NOT NULL);',
+  );
+  const upsert = db.prepare(
+    'INSERT INTO transactions (id, source_id, payload_json) VALUES (@id, @sourceId, @payload) ON CONFLICT(id) DO UPDATE SET source_id=excluded.source_id, payload_json=excluded.payload_json',
+  );
+  return {
+    upsert: (tx) => {
+      upsert.run({ id: tx.id, sourceId: tx.sourceId, payload: JSON.stringify(tx) });
+    },
+    findById: (id) => {
+      const row = db.prepare('SELECT payload_json FROM transactions WHERE id = ?').get(id) as
+        { payload_json: string } | undefined;
+      return row ? (JSON.parse(row.payload_json) as Transaction) : undefined;
+    },
+    listAll: () =>
+      (
+        db.prepare('SELECT payload_json FROM transactions ORDER BY id').all() as {
+          payload_json: string;
+        }[]
+      ).map((row) => JSON.parse(row.payload_json) as Transaction),
+    count: () =>
+      (db.prepare('SELECT COUNT(*) as count FROM transactions').get() as { count: number }).count,
+    close: () => db.close(),
+  };
+}
