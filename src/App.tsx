@@ -6,6 +6,7 @@ import { loadListings, loadMetadata, type PublicationMetadata } from './data/pub
 import { AppLayout } from './layouts/AppLayout';
 import { SearchPage } from './pages/SearchPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+import { PersonalStateProvider } from './personal-state/context';
 import './App.css';
 
 function Application() {
@@ -36,17 +37,19 @@ function Application() {
   if (!metadata || !listings)
     return <StatusView title="正在準備 HomeHunt" message="正在載入最新公開資料…" />;
   return (
-    <HashRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<SearchPage listings={listings} />} />
-          <Route path="/search" element={<SearchPage listings={listings} />} />
-          <Route path="/favorites" element={<PlaceholderPage title="收藏" />} />
-          <Route path="/visited" element={<PlaceholderPage title="已看屋" />} />
-          <Route path="/settings" element={<PlaceholderPage title="設定" />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <PersonalStateProvider>
+      <HashRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<SearchPage listings={listings} />} />
+            <Route path="/search" element={<SearchPage listings={listings} />} />
+            <Route path="/favorites" element={<PlaceholderPage title="收藏" />} />
+            <Route path="/visited" element={<PlaceholderPage title="已看屋" />} />
+            <Route path="/settings" element={<PlaceholderPage title="設定" />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </PersonalStateProvider>
   );
 }
 export function App() {

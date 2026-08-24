@@ -4,6 +4,8 @@ import type { Listing } from '../../shared/domain';
 import { EmptyState } from '../components/StatusView';
 import { searchListings, warningsFor, type SortOption } from '../search/engine';
 import { criteriaFromSearch } from '../search/url';
+import { usePersonalState } from '../personal-state/context';
+import { StatusView } from '../components/StatusView';
 
 const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'NEWEST', label: '最新上架' },
@@ -27,10 +29,30 @@ export function SearchPage({ listings }: { listings: Listing[] }) {
   const navigate = useNavigate();
   const criteria = criteriaFromSearch(params.toString());
   const [sort, setSort] = useState<SortOption>('NEWEST');
+  const {
+    ready,
+    states,
+    error: personalStateError,
+    toggleFavorite,
+    toggleVisited,
+    exclude,
+    undoExclude,
+  } = usePersonalState();
+  const [undoId, setUndoId] = useState<string>();
   const results = useMemo(
-    () => searchListings(listings, criteria, sort),
-    [listings, criteria, sort],
+    () =>
+      searchListings(
+        listings.filter((item) => !states[item.id]?.excluded),
+        criteria,
+        sort,
+      ),
+    [listings, criteria, sort, states],
   );
+  if (!ready) return <StatusView title="正在載入個人狀態" message="正在準備收藏與已看屋資料…" />;
+  if (personalStateError)
+    return (
+      <StatusView title="個人狀態載入失敗" message="收藏與排除狀態無法使用，請重新整理後再試。" />
+    );
   const update = (name: string, value: string) => {
     const next = new URLSearchParams(params);
     if (value) next.set(name, value);
@@ -227,6 +249,33 @@ export function SearchPage({ listings }: { listings: Listing[] }) {
                       ? `權狀 ${item.buildingArea} 坪`
                       : ''}
                 </p>
+                <div className="personal-actions" aria-label={`${item.id} 個人操作`}>
+                  <button type="button" onClick={() => void toggleFavorite(item.id)}>
+                    {states[item.id]?.favorite ? '已收藏' : '收藏'}
+                  </button>
+                  <button type="button" onClick={() => void toggleVisited(item.id)}>
+                    {states[item.id]?.visited ? '已看屋' : '標記已看屋'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('確定要永久排除這筆房源嗎？'))
+                        void exclude(item.id).then(() => setUndoId(item.id));
+                    }}
+                  >
+                    排除
+                  </button>
+                </div>
+                {undoId === item.id ? (
+                  <p>
+                    <button
+                      type="button"
+                      onClick={() => void undoExclude(item.id).then(() => setUndoId(undefined))}
+                    >
+                      復原排除
+                    </button>
+                  </p>
+                ) : null}
               </article>
             </li>
           ))}
