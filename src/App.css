@@ -105,6 +105,16 @@ h3 {
   cursor: pointer;
   padding: 0.7rem 1rem;
 }
+.offline-indicator {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.45rem;
+  background: #fff1c7;
+  color: #704d00;
+  text-align: center;
+  font-weight: 700;
+}
 .app-footer {
   padding: 1.25rem;
   color: #567087;

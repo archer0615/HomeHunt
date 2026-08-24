@@ -1,0 +1,62 @@
+name: Data Refresh
+
+on:
+  workflow_dispatch:
+    inputs:
+      reconciliation:
+        description: Run the scheduled full reconciliation mode
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # 08:20 and 20:20 Asia/Taipei, expressed in UTC.
+    - cron: '20 0,12 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canonical-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - name: Show refresh context
+        run: |
+          echo "commit=${GITHUB_SHA}"
+          echo "reconciliation=${{ inputs.reconciliation || 'scheduled-incremental' }}"
+          node --version
+          npm --version
+      - name: Run data refresh
+        run: |
+          if [ ! -f public/data/metadata.json ]; then
+            echo 'Missing public/data/metadata.json: refusing to publish without known-good state.'
+            exit 1
+          fi
+          mkdir -p data
+          npm run data:hydrate -- --input public/data --db data/canonical.sqlite
+          npm run data:publish -- --db data/canonical.sqlite --output public/data
+      - name: Show publication metadata
+        if: success()
+        run: node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('public/data/metadata.json','utf8')); console.log(JSON.stringify({appDataVersion:m.appDataVersion,generatedAt:m.generatedAt,counts:m.counts}));"
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-refresh-diagnostics-${{ github.run_id }}
+          path: |
+            public/data/metadata.json
+            '*.log'
+          if-no-files-found: ignore
+          retention-days: 7

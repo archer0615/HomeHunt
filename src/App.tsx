@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { StatusView } from './components/StatusView';
-import { loadListingDetailData, loadMetadata, type PublicationMetadata } from './data/publication';
+import { loadPublishedDataset, type PublicationMetadata } from './data/publication';
 import { AppLayout } from './layouts/AppLayout';
 import { SearchPage } from './pages/SearchPage';
 import { ListingDetailPage } from './pages/ListingDetailPage';
@@ -12,14 +12,17 @@ import './App.css';
 
 function Application() {
   const [metadata, setMetadata] = useState<PublicationMetadata>();
-  const [dataset, setDataset] = useState<Awaited<ReturnType<typeof loadListingDetailData>>>();
+  const [dataset, setDataset] =
+    useState<Awaited<ReturnType<typeof loadPublishedDataset>>['dataset']>();
+  const [offline, setOffline] = useState(false);
   const [error, setError] = useState<Error>();
   const load = () => {
     setError(undefined);
-    void Promise.all([loadMetadata(), loadListingDetailData()])
-      .then(([nextMetadata, nextDataset]) => {
+    void loadPublishedDataset()
+      .then(({ metadata: nextMetadata, dataset: nextDataset, offline: nextOffline }) => {
         setMetadata(nextMetadata);
         setDataset(nextDataset);
+        setOffline(nextOffline);
       })
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason : new Error('metadata load failed')),
@@ -40,6 +43,11 @@ function Application() {
   return (
     <PersonalStateProvider>
       <HashRouter>
+        {offline ? (
+          <div className="offline-indicator" role="status">
+            離線模式
+          </div>
+        ) : null}
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<SearchPage listings={dataset.listings} />} />
