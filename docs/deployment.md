@@ -18,6 +18,8 @@ Phase 1 Hosting 為 GitHub Pages，Frontend 為 React/Vite/TypeScript/PWA。Page
 
 ## Workflow Separation
 
+目前 GitHub Pages、CI 與 Data Refresh workflows 全部停用。以下 workflow 定義保留為歷史部署規格，重新啟用前必須另行確認 Node.js 22 runtime、權限、資料安全與人工審核流程。
+
 未來至少分為：
 
 - `.github/workflows/ci.yml`：push、pull_request；執行 `npm ci`、`npm run typecheck`、`npm run lint`、`npm run test`、`npm run build`，涉及 E2E 時再執行 `npm run test:e2e`。
