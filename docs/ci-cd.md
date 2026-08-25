@@ -10,6 +10,15 @@
 
 Data Refresh workflow 會先用正式 `data:hydrate` CLI 將已發布的 known-good dataset 還原到 runner-local SQLite，再呼叫既有的 `data:publish` CLI。若 `public/data/metadata.json` 不存在，workflow 會安全失敗，不會用空資料覆蓋 known-good dataset。新增資料來源的 crawler orchestration 仍必須由正式 TypeScript command 提供，不能在 YAML 中重寫 domain logic。
 
+首次資料初始化使用一次性的人工流程，不由排程自動執行：
+
+```bash
+npm run data:bootstrap -- --fixture
+npm run data:bootstrap:promote -- --candidate <bootstrapId>
+```
+
+Bootstrap 先產生隔離的 candidate，要求 MOI、591-sale、591-newhouse 全部 SUCCESS，並通過 publication validation；只有人工確認後才可 promote。Promote 會建立 canonical SQLite、published data 與 active baseline marker。若 active baseline 已存在，bootstrap 與 promote 都會拒絕覆蓋。未有 active baseline 或 publication metadata 時，正常 `data:refresh` 維持安全失敗。
+
 本機既有流程仍可使用：
 
 ```bash

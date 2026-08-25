@@ -20,6 +20,7 @@ import { runRefresh, type SourceResult } from './orchestrator';
 const fixture = process.argv.includes('--fixture');
 const dataDir = path.resolve('public/data');
 const databasePath = path.resolve('data/canonical.sqlite');
+const baselineMarker = path.resolve('data/active-baseline.json');
 const startedAt = new Date().toISOString();
 const runId = `refresh-${startedAt.replace(/[-:.TZ]/g, '')}`;
 
@@ -148,6 +149,7 @@ async function runFixture(): Promise<void> {
 
 async function runProduction(): Promise<void> {
   await fs.access(path.join(dataDir, 'metadata.json'));
+  await fs.access(baselineMarker);
   await fs.mkdir(path.dirname(databasePath), { recursive: true });
   await hydratePublishedData(dataDir, databasePath);
   const lifecycleStore = new ListingLifecycleStore(databasePath);

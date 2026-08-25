@@ -17,6 +17,8 @@
     "test:crawler": "vitest run tests/moi-pipeline.test.ts",
     "data:publish": "tsx crawler/publication/cli.ts",
     "data:hydrate": "tsx crawler/publication/hydrate.ts",
+    "data:bootstrap": "tsx crawler/bootstrap/cli.ts",
+    "data:bootstrap:promote": "tsx crawler/bootstrap/promote.ts",
     "data:refresh": "tsx crawler/refresh/cli.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
