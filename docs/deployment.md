@@ -2,6 +2,8 @@
 
 ## Deployment Architecture
 
+> **目前暫停使用 GitHub Pages：** 短期內不得將本專案部署、展示或發布至 GitHub Pages；Pages／Actions 維持停用。恢復前必須重新完成部署設定、資料安全檢查與 production validation，並由後續 Phase 明確解除此暫停狀態。
+
 ```mermaid
 flowchart TD
   S[Internet Data Sources] --> R[GitHub Actions / Local]
@@ -14,7 +16,7 @@ flowchart TD
   P --> A[HomeHunt PWA]
 ```
 
-Phase 1 Hosting 為 GitHub Pages，Frontend 為 React/Vite/TypeScript/PWA。Pages 只提供靜態 Frontend、Published JSON/NDJSON 與 PWA assets，不執行 Crawler、SQLite runtime、Server API 或 Background Job。Crawler 主要在 GitHub Actions 執行，Local 是 fallback；不建立 Backend、VPS、Cloud SQL、AWS/Azure Backend 或 SSR。Production 只有 GitHub Pages，Local 用於 Development/Debug。
+原規格的 Phase 1 Hosting 為 GitHub Pages；目前暫停實際使用。Frontend 為 React/Vite/TypeScript/PWA。未解除暫停前，不得將 Pages 作為靜態 Frontend、Published JSON/NDJSON 或 PWA assets 的正式入口。Pages 不執行 Crawler、SQLite runtime、Server API 或 Background Job。Crawler 主要在 GitHub Actions 執行，Local 是 fallback；不建立 Backend、VPS、Cloud SQL、AWS/Azure Backend 或 SSR。
 
 ## Workflow Separation
 
