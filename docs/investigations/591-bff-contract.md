@@ -25,3 +25,13 @@ Fixtures 位於 `tests/fixtures/591/`，檢查 helper 位於 `crawler/collectors
 ## Unresolved contract
 
 必要/可選 query、district/section 參數、page size 欄位、status 型別、null/空字串/缺欄位行為、HTTP error response、必要 headers、filter 是否生效，以及是否需 detail API，均需在可合法取得 response 的環境由人工重新執行少量 probe 後確認。成功 fixture 目前不可標示為 observed。
+
+## Sale adapter Phase
+
+本 Phase 僅完成可隔離、可測試的 `591-sale` adapter：`request.ts` 建立最小 `GET` request，`parser.ts` 以 `unknown` 接收 JSON boundary，`types.ts` 定義 Sale 專屬 raw type，`normalizer.ts` 提供穩定 `591-sale:<sourceListingId>` identity 與既有 normalized listing mapping。request query（`city_id`、`page`、`page_size`）是 `inferred`／`unverified`，不是已確認的 production contract。
+
+Sale scope 只使用 `crawler/scope/production.ts` 的 `臺北市 -> 1`、`新北市 -> 3` 與城市 boundary；不明或非 scope 城市會 fail closed。錯誤分類涵蓋 `ACCESS_DENIED`、`RATE_LIMITED`、`NON_JSON`、`MALFORMED_JSON`、invalid envelope 與 invalid listing。deterministic fixture tests 覆蓋成功、空結果、缺 data／house_list、非 array、malformed JSON、非 JSON、403、429、scope 與 identity。
+
+目前仍為：confirmed＝endpoint、GET、Accept header、既有 production city mapping；inferred＝Sale envelope、欄位 mapping 與 query names；unverified＝live response、Content-Type、pagination、必要 query／headers 與實際欄位型別。Sale 的 `liveCollectionEnabled` 仍為 `false`，本 Phase 未執行 live collection、bootstrap、candidate promote、refresh 或資料發布；先前 socket access denied 也因此維持停止與 fail-closed。
+
+本 Phase 未實作 `591-newhouse` adapter，亦未修改 production scope、baseline、published data 或 MOI pipeline。

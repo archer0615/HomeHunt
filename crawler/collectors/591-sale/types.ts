@@ -1,3 +1,4 @@
 export interface Raw591SaleListing { sourceListingId?: string; title?: string; city?: string; district?: string; addressText?: string; totalPriceText?: string; unitPriceText?: string; buildingAreaText?: string; roomsText?: string; hallsText?: string; bathroomsText?: string; floorText?: string; totalFloorsText?: string; buildingAgeText?: string; buildingTypeText?: string; parkingText?: string; mrtText?: string; sourceUrl?: string; raw: Record<string, unknown>; }
 export type CollectorStatus = 'SUCCESS' | 'PARTIAL' | 'FAILED';
 export interface SaleCollectorResult { status: CollectorStatus; items: Raw591SaleListing[]; fetchedPages: number; warnings: string[]; errors: string[]; }
+export type SaleErrorCode = 'ACCESS_DENIED' | 'RATE_LIMITED' | 'NON_JSON' | 'INVALID_ENVELOPE' | 'MALFORMED_JSON' | 'OUT_OF_SCOPE' | 'INVALID_LISTING';

@@ -1,4 +1,4 @@
-import type { Raw591SaleListing, SaleCollectorResult } from './types';
+import type { Raw591SaleListing, SaleCollectorResult, SaleErrorCode } from './types';
 
 export function parseSaleItems(payload: unknown): Raw591SaleListing[] {
   if (!Array.isArray(payload)) throw new Error('SOURCE_CHANGED: expected listing item array');
@@ -6,4 +6,16 @@ export function parseSaleItems(payload: unknown): Raw591SaleListing[] {
 }
 function stringValue(value: unknown): string | undefined { return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined; }
 export function parseSaleResponse(payload: unknown, page: number): SaleCollectorResult { try { if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('SOURCE_CHANGED: expected Sale BFF envelope'); const envelope = payload as Record<string, unknown>; const data = envelope.data; if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('SOURCE_CHANGED: missing Sale BFF data'); const items = (data as Record<string, unknown>).house_list; if (!Array.isArray(items)) throw new Error('SOURCE_CHANGED: missing data.house_list'); return { status: 'SUCCESS', items: parseSaleItems(items), fetchedPages: page, warnings: [], errors: [] }; } catch (error) { return { status: 'FAILED', items: [], fetchedPages: page, warnings: [], errors: [error instanceof Error ? error.message : 'PARSE_ERROR'] }; } }
+
+export function parseSaleJson(text: string, page: number): SaleCollectorResult {
+  try { return parseSaleResponse(JSON.parse(text) as unknown, page); }
+  catch { return { status: 'FAILED', items: [], fetchedPages: page, warnings: [], errors: ['MALFORMED_JSON'] }; }
+}
+
+export function classifySaleResponse(status: number, contentType: string | undefined): SaleErrorCode | undefined {
+  if (status === 403) return 'ACCESS_DENIED';
+  if (status === 429) return 'RATE_LIMITED';
+  if (!contentType?.toLowerCase().includes('json')) return 'NON_JSON';
+  return undefined;
+}
 export function parseSalePage(payload: unknown, page: number): SaleCollectorResult { try { const items = parseSaleItems(payload); return { status: 'SUCCESS', items, fetchedPages: page, warnings: [], errors: [] }; } catch (error) { return { status: 'FAILED', items: [], fetchedPages: page, warnings: [], errors: [error instanceof Error ? error.message : 'PARSE_ERROR'] }; } }
