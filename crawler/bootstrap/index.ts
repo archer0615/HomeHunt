@@ -22,7 +22,7 @@ export interface BootstrapCandidateSummary {
   bootstrapId: string;
   generatedAt: string;
   promotable: boolean;
-  sources: Record<string, { status: SourceResult['status']; records: number }>;
+  sources: Record<string, { status: SourceResult['status']; records: number; errorMessage?: string }>;
   validation: {
     status: 'PASS' | 'FAIL';
     duplicateListingIds: number;
@@ -60,6 +60,7 @@ function sourceSummary(results: BootstrapSourceResult[]): BootstrapCandidateSumm
       {
         status: result.status,
         records: result.observations.length + (result.transactions?.length ?? 0),
+        ...(result.errorMessage ? { errorMessage: result.errorMessage } : {}),
       },
     ]),
   );

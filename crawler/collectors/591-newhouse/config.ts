@@ -1,1 +1,1 @@
-export const newHouseSourceConfig = { sourceId: '591-newhouse', baseUrl: 'https://newhouse.591.com.tw/', maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;
+export const newHouseSourceConfig = { sourceId: '591-newhouse', baseUrl: 'https://newhouse.591.com.tw/', liveCollectionEnabled: false, maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;
