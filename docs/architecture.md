@@ -12,3 +12,7 @@ Collector 負責 Request、Pagination、Source Parsing、Raw Object；Normalizer
 前端採 React、Vite、TypeScript、PWA、IndexedDB；GitHub Pages 優先 HashRouter。SQLite 用於 processing、normalization、history、analysis、development；IndexedDB 僅存個人狀態。
 
 GitHub Actions 執行每日 08:20、20:20（Asia/Taipei）增量 Crawl 與每週 Full Reconciliation，提供 Local fallback。來源獨立執行／allSettled，錯誤互不影響。Phase 1 不需 Backend、VPS、Cloud SQL、AWS、Azure；不得繞過 CAPTCHA、登入、Access Control 或封鎖。
+
+## Production Scope v1
+
+正式 crawler boundary 為臺北市與新北市全部行政區，來源包含 `591-sale`、`591-newhouse` 與 MOI。MOI 使用 rolling 5 years 的正式交易日期語意。Bootstrap 與正常 Refresh 共用 `crawler/scope/production.ts` 的 Production Scope Source of Truth；各 source adapter 僅保留自己的 city identifier mapping。Decision Engine、AI Advisor 與 GitHub Pages 維持 Deferred / NOT IN SCOPE。

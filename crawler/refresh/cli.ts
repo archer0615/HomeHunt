@@ -115,7 +115,7 @@ async function collectMoi(database: string): Promise<SourceResult> {
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
     const repository = createTransactionRepository(database);
     try {
-      for (const [file, bytes] of Object.entries(files)) runMoiCsvPipeline(bytes, file, repository);
+    for (const [file, bytes] of Object.entries(files)) runMoiCsvPipeline(bytes, file, repository, { referenceDate: startedAt });
     } finally {
       repository.close();
     }

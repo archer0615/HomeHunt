@@ -9,6 +9,7 @@ import { publicationInputFromStores, publishData } from '../publication';
 import type { SourceResult } from '../refresh/orchestrator';
 import { parseCsvBytes } from '../collectors/moi/parser';
 import { normalizeMoi } from '../collectors/moi/normalizer';
+import { PRODUCTION_SCOPE } from '../scope/production';
 
 export const REQUIRED_SOURCES = ['moi', '591-sale', '591-newhouse'] as const;
 export const ACTIVE_BASELINE_FILE = 'active-baseline.json';
@@ -47,6 +48,7 @@ export interface BootstrapCandidateResult {
   candidateDir: string;
   summary: BootstrapCandidateSummary;
 }
+export const bootstrapProductionScope = PRODUCTION_SCOPE;
 
 const stableId = (value: unknown): string =>
   createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 12);
@@ -87,7 +89,10 @@ export async function buildBootstrapCandidate(options: {
   bootstrapId?: string;
   candidateRoot: string;
   results: BootstrapSourceResult[];
+  scope?: typeof PRODUCTION_SCOPE;
 }): Promise<BootstrapCandidateResult> {
+  const scope = options.scope ?? PRODUCTION_SCOPE;
+  if (scope !== PRODUCTION_SCOPE) throw new Error('bootstrap requires the production scope');
   const bootstrapId = options.bootstrapId ?? `bootstrap-${Date.now()}-${stableId(options.results)}`;
   const candidateDir = path.resolve(options.candidateRoot, bootstrapId);
   const databasePath = path.join(candidateDir, 'canonical.sqlite');

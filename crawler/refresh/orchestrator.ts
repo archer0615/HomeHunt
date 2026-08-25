@@ -2,6 +2,8 @@ import type { ListingEvent, PriceHistory } from '../../shared/domain';
 import { processListingObservation, reconcileMissing } from '../lifecycle/service';
 import type { CrawlRunInput, ListingObservation } from '../lifecycle/types';
 import { ListingLifecycleStore } from '../lifecycle/store';
+import { PRODUCTION_SCOPE } from '../scope/production';
+export const refreshProductionScope = PRODUCTION_SCOPE;
 
 export type SourceStatus = 'SUCCESS' | 'PARTIAL' | 'FAILED';
 export interface SourceResult {
