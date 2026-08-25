@@ -1,1 +1,1 @@
-export const saleSourceConfig = { sourceId: '591-sale', baseUrl: 'https://sale.591.com.tw/', liveCollectionEnabled: false, maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;
+export const saleSourceConfig = { sourceId: '591-sale', baseUrl: 'https://bff-house.591.com.tw/v1/web/sale/list', liveCollectionEnabled: false, maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;

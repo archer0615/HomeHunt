@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { collectSalePages } from '../crawler/collectors/591-sale/collector';
+import { classifySaleHttpFailure, collectSalePages } from '../crawler/collectors/591-sale/collector';
 import { normalizeSale } from '../crawler/collectors/591-sale/normalizer';
-import { parseSalePage } from '../crawler/collectors/591-sale/parser';
+import { parseSalePage, parseSaleResponse } from '../crawler/collectors/591-sale/parser';
 
 const raw = { sourceListingId: '123', title: '三房中古屋', city: '台北市', district: '信義區', totalPriceText: '2580萬', unitPriceText: '78萬/坪', buildingAreaText: '32.5坪', roomsText: '3房', mrtText: '市政府站', sourceUrl: 'https://sale.591.com.tw/home/123', raw: { listingType: '中古屋' } };
 describe('591 sale collector', () => {
@@ -10,4 +10,6 @@ describe('591 sale collector', () => {
   it('keeps source identity independent and treats unknown type conservatively', () => { const listing = normalizeSale({ ...raw, sourceListingId: '125', raw: { listingType: '新建案' }, totalPriceText: '價格待定' }); expect(listing.id).toBe('591-sale:125'); expect(listing.listingType).toBe('UNKNOWN'); expect(listing.totalPrice).toBeUndefined(); });
   it('detects duplicate pages and returns partial on mid-crawl failure', async () => { const duplicate = await collectSalePages(async () => [raw], 5); expect(duplicate.warnings[0]).toContain('duplicate'); let page = 0; const partial = await collectSalePages(async () => { page += 1; if (page === 2) throw new Error('TIMEOUT'); return [raw]; }, 5); expect(partial.status).toBe('PARTIAL'); });
   it('marks malformed source payload as failed', () => { expect(parseSalePage({ unexpected: true }, 1).status).toBe('FAILED'); });
+  it('parses the inferred BFF envelope and maps planned sale fields', () => { const result = parseSaleResponse({ status: 1, data: { house_list: [{ houseid: 'bff-1', title: '測試', city: '臺北市', district: '信義區', address: '測試路', price: '2580萬', area: '32坪', room: '3房', floor: '8', totalFloors: '12', age: '5', buildingType: '住宅大樓', parking: '坡道平面', url: 'https://sale.591.com.tw/home/bff-1' }] } }, 1); const listing = normalizeSale(result.items[0]!); expect(result.status).toBe('SUCCESS'); expect(listing.address).toBe('測試路'); expect(listing.floor).toBe(8); expect(listing.buildingType).toBe('RESIDENTIAL_HIGHRISE'); expect(listing.hasParking).toBe(true); });
+  it('classifies Sale access and rate-limit failures', () => { expect(classifySaleHttpFailure(403)).toEqual({ status: 'FAILED', errorCode: 'ACCESS_DENIED', retryable: false }); expect(classifySaleHttpFailure(429)).toEqual({ status: 'PARTIAL', errorCode: 'RATE_LIMITED', retryable: true }); });
 });
