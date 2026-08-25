@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   listingEventSchema,
   listingSchema,
@@ -63,8 +64,16 @@ export async function hydratePublishedData(
   };
 }
 
-const input = valueAfter(process.argv.slice(2), '--input') ?? 'public/data';
-const database = valueAfter(process.argv.slice(2), '--db');
-if (!database)
-  throw new Error('Usage: npm run data:hydrate -- --input <public/data> --db <canonical.sqlite>');
-console.log(JSON.stringify(await hydratePublishedData(input, database)));
+async function main(): Promise<void> {
+  const input = valueAfter(process.argv.slice(2), '--input') ?? 'public/data';
+  const database = valueAfter(process.argv.slice(2), '--db');
+  if (!database)
+    throw new Error('Usage: npm run data:hydrate -- --input <public/data> --db <canonical.sqlite>');
+  console.log(JSON.stringify(await hydratePublishedData(input, database)));
+}
+
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+)
+  await main();
