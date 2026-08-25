@@ -63,6 +63,9 @@ function sourceFailure(sourceId: string, error: unknown): SourceResult {
 }
 
 async function collectSale(): Promise<SourceResult> {
+  if (!saleSourceConfig.liveCollectionEnabled) {
+    return sourceFailure(saleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: response contract not confirmed');
+  }
   try {
     const result = await collectSalePages(
       (page) =>
@@ -86,6 +89,9 @@ async function collectSale(): Promise<SourceResult> {
 }
 
 async function collectNewHouse(): Promise<SourceResult> {
+  if (!newHouseSourceConfig.liveCollectionEnabled) {
+    return sourceFailure(newHouseSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: response contract not confirmed');
+  }
   try {
     const result = await collectNewHousePages(
       (page) =>
