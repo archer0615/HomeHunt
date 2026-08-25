@@ -8,7 +8,7 @@
 
 ### GitHub Pages 暫停使用
 
-短期內請勿使用或依賴 GitHub Pages 作為 HomeHunt 的展示、部署或資料發布入口。Pages／Actions 維持停用，待部署設定、資料發布流程與 production validation 重新確認後，另行公告恢復。
+短期內請勿使用或依賴 GitHub Pages 作為 HomeHunt 的展示、部署或資料發布入口。Production App 尚未正式部署或驗證；目前定位為 Local Application／Repository-Validated Application。Pages／Actions 維持停用，待部署設定、資料發布流程與 production validation 重新確認後，另行公告恢復。
 
 ## Phase 1 Scope
 
@@ -16,7 +16,7 @@
 
 ## Architecture Overview
 
-`Data Sources → Collectors → Raw Data → Normalizers → Validation → Domain Model → SQLite → JSON/NDJSON → GitHub Pages → PWA`
+`Data Sources → Collectors → Raw Data → Normalizers → Validation → Domain Model → SQLite → JSON/NDJSON → Local Validation → Future Hosting Decision`
 
 ## Documentation Index
 

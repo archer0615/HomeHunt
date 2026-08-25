@@ -48,6 +48,8 @@ Phase 1 不做跨網站 Property 去重、AI、估價模型、多人帳號、登
 
 ## Open Questions / Deferred Decisions
 
+- GitHub Pages 暫短期停用；Production Hosting、Production URL 與正式 PWA validation deferred。近期優先完成 591 adapters、crawler／refresh orchestration、fixture publication validation、offline browser smoke test 與 known-good protection，再評估 hosting 方案。
+
 - Phase 03 開始前決定 Node.js 22 相容且最小的 SQLite driver。
 - Phase 08 開始 UI 實作前決定 CSS/UI solution。
 
