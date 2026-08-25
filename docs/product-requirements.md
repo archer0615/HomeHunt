@@ -7,8 +7,9 @@ HomeHunt 是個人住宅房源聚合、搜尋、篩選、追蹤與決策分析 P
 ## Phases
 
 - **Phase 1**：統一搜尋、篩選、排序、詳情、歷史、個人狀態、離線使用與 MOI 實價登錄；來源為 `591-sale`、`591-newhouse`、`moi`。
-- **Phase 2**：Decision Engine。
-- **Phase 3**：評估 AI Advisor。Phase 1 不加入 LLM、Chatbot 或 AI Recommendation API。
+- **Phase 2 — Decision Engine**：Status: Deferred。Phase 1 完成與穩定性驗證優先，未排入近期 implementation roadmap。
+- **Phase 3 — AI Advisor**：Status: Deferred。Phase 1 完成與穩定性驗證優先，未排入近期 implementation roadmap。
+- Phase 1 不加入 LLM、Chatbot 或 AI Recommendation API。
 
 ## 功能需求
 
