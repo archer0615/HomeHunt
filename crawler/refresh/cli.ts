@@ -18,11 +18,13 @@ import { publicationInputFromStores, publishData } from '../publication';
 import { runRefresh, type SourceResult } from './orchestrator';
 
 const fixture = process.argv.includes('--fixture');
+const candidateMode = process.argv.includes('--candidate');
 const dataDir = path.resolve('public/data');
-const databasePath = path.resolve('data/canonical.sqlite');
-const baselineMarker = path.resolve('data/active-baseline.json');
 const startedAt = new Date().toISOString();
 const runId = `refresh-${startedAt.replace(/[-:.TZ]/g, '')}`;
+const runRoot = candidateMode ? path.resolve('data/refresh-candidates', runId) : path.resolve('data');
+const databasePath = path.join(runRoot, 'canonical.sqlite');
+const baselineMarker = path.resolve('data/active-baseline.json');
 
 async function fetchJsonPage(
   url: string,
@@ -162,7 +164,14 @@ async function runProduction(): Promise<void> {
   const transactionRepository = createTransactionRepository(databasePath);
   try {
     const previousInput = publicationInputFromStores(lifecycleStore, transactionRepository);
-    const results = await Promise.all([collectMoi(databasePath), collectSale(), collectNewHouse()]);
+    const moiResult = await collectMoi(databasePath);
+    const results = [
+      moiResult,
+      ...(await Promise.all([
+        collectSale(),
+        collectNewHouse(),
+      ])),
+    ];
     const refresh = runRefresh(results, {
       runId,
       startedAt,
@@ -179,7 +188,8 @@ async function runProduction(): Promise<void> {
         itemCount: result.observations.length,
       })),
     };
-    const publication = await publishData(input, { targetDir: dataDir, previousInput });
+    const publicationTarget = candidateMode ? path.join(runRoot, 'publication') : dataDir;
+    const publication = await publishData(input, { targetDir: publicationTarget, previousInput });
     console.log(
       JSON.stringify({
         runId,
@@ -189,6 +199,7 @@ async function runProduction(): Promise<void> {
         aggregateStatus: refresh.status,
         lifecycleAdvanced: refresh.events > 0 || refresh.histories > 0,
         publication,
+        candidate: candidateMode ? runId : undefined,
         canonicalPersistence: publication.changed,
       }),
     );

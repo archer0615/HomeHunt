@@ -4,11 +4,19 @@
 
 ## 目前狀態
 
-**Implementation In Progress / Phase 01 Foundation implemented**：Foundation 骨架已建立；npm 工具鏈驗證受目前本機安裝環境阻塞，尚未進入後續 Phase。
+**Local-only development**：主要功能與品質驗證已完成，目前只支援本機預覽與本機資料更新，不進行正式部署。
 
 ### GitHub Pages 暫停使用
 
 短期內請勿使用或依賴 GitHub Pages 作為 HomeHunt 的展示、部署或資料發布入口。Production App 尚未正式部署或驗證；目前定位為 Local Application／Repository-Validated Application。Pages／Actions 維持停用，待部署設定、資料發布流程與 production validation 重新確認後，另行公告恢復。
+
+## 目前使用方式
+
+```powershell
+npm run local
+```
+
+請使用 Chrome 開啟 `http://localhost:4173`。Windows 排程可每日 20:20 執行本機資料更新；詳細方式請參閱 [本機使用](docs/local-only.md)。
 
 ## Phase 1 Scope
 
@@ -34,4 +42,4 @@
 
 ## Development Status
 
-尚未開始正式開發；後續實作必須先閱讀 `AGENTS.md` 與 `docs/`。
+目前以 Local-only 為產品邊界；後續修改仍必須先閱讀 `AGENTS.md` 與 `docs/`。

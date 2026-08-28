@@ -15,6 +15,8 @@ import { moiConfig } from '../collectors/moi/config';
 import { discoverCsvFiles, downloadMoiArchive } from '../collectors/moi/downloader';
 import { normalizeMoiArchive } from '../pipeline/moi';
 import { PRODUCTION_SCOPE } from '../scope/production';
+import { presaleRegistryConfig } from '../collectors/moi-presale-registry/config';
+import { collectPresaleProjects } from '../collectors/moi-presale-registry/collector';
 
 const fixture = process.argv.includes('--fixture');
 const observedAt = new Date().toISOString();
@@ -59,8 +61,7 @@ async function collectLiveNewHouse(): Promise<BootstrapSourceResult> {
 async function collectLiveMoi(): Promise<BootstrapSourceResult> {
   try {
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
-    const transactions = normalizeMoiArchive(files, observedAt);
-    return { sourceId: 'moi', status: 'SUCCESS', observations: [], transactions };
+    return { sourceId: 'moi', status: 'SUCCESS', observations: [], transactions: normalizeMoiArchive(files, observedAt) };
   } catch (error) { return failed('moi', error); }
 }
 
@@ -69,7 +70,11 @@ if (fixture) {
   const csv = await fs.readFile(path.resolve('tests/fixtures/moi/transactions.csv'), 'utf8');
   result = await buildBootstrapCandidate({ candidateRoot: path.resolve('data/bootstrap'), bootstrapId: 'fixture-bootstrap', results: fixtureBootstrapResults(csv, '2026-08-25T00:00:00.000Z'), scope: PRODUCTION_SCOPE });
 } else {
-  const results = await Promise.all([collectLiveMoi(), collectLiveSale(), collectLiveNewHouse()]);
-  result = await buildBootstrapCandidate({ candidateRoot: path.resolve('data/bootstrap'), bootstrapId: `live-${observedAt.replace(/[-:.TZ]/g, '')}`, results, scope: PRODUCTION_SCOPE });
+  const [moiResult, saleResult, newHouseResult] = await Promise.all([collectLiveMoi(), collectLiveSale(), collectLiveNewHouse()]);
+  let presaleProjects = [];
+  try { presaleProjects = await collectPresaleProjects(presaleRegistryConfig.downloadUrl, fetch, observedAt); }
+  catch (error) { console.error(`moi-presale-registry: ${error instanceof Error ? error.message : 'SOURCE_ERROR'}`); }
+  const results = [moiResult, saleResult, newHouseResult];
+  result = await buildBootstrapCandidate({ candidateRoot: path.resolve('data/bootstrap'), bootstrapId: `live-${observedAt.replace(/[-:.TZ]/g, '')}`, results, presaleProjects, scope: PRODUCTION_SCOPE });
 }
 console.log(JSON.stringify(result.summary, null, 2));

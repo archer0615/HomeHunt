@@ -15,6 +15,8 @@ GitHub Actions 的 CI、Data Refresh 與 Pages workflow 目前全部停用；未
 
 短期驗證路徑為 Local Build → Local Preview → Offline Browser Validation → Fixture Data Validation → Repository CI；暫不納入 GitHub Pages Deployment、Production URL Validation 或 PWA Production Validation。Crawler、Refresh、Publication 與 Web Hosting 解耦，Pages 暫停不影響 SQLite canonical state、Candidate lifecycle、MOI pipeline、591 fail-closed boundary 或 JSON/NDJSON publication。
 
+目前採 Local-only 運作：使用 `npm run local` 建置並啟動本機預覽，Windows Task Scheduler 每日 20:20 執行 refresh。失敗只記錄至 `data/logs/refresh.log`，保留上一份 known-good dataset；新 candidate 必須人工確認後 promote。Chrome 是主要支援瀏覽器，離線使用最近一次成功資料。
+
 ## Production Scope v1
 
 正式 crawler boundary 為臺北市與新北市全部行政區，來源包含 `591-sale`、`591-newhouse` 與 MOI。MOI 使用 rolling 5 years 的正式交易日期語意。Bootstrap 與正常 Refresh 共用 `crawler/scope/production.ts` 的 Production Scope Source of Truth；各 source adapter 僅保留自己的 city identifier mapping。Decision Engine、AI Advisor、GitHub Pages 與 GitHub Actions 維持 Deferred / NOT IN SCOPE。

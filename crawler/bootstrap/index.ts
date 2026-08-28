@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import type { ListingObservation } from '../lifecycle/types';
+import type { PresaleProject } from '../../shared/domain';
 import { ListingLifecycleStore } from '../lifecycle/store';
 import { processListingObservation } from '../lifecycle/service';
 import { createTransactionRepository } from '../persistence/sqlite';
@@ -90,6 +91,7 @@ export async function buildBootstrapCandidate(options: {
   bootstrapId?: string;
   candidateRoot: string;
   results: BootstrapSourceResult[];
+  presaleProjects?: PresaleProject[];
   scope?: typeof PRODUCTION_SCOPE;
 }): Promise<BootstrapCandidateResult> {
   const scope = options.scope ?? PRODUCTION_SCOPE;
@@ -120,12 +122,12 @@ export async function buildBootstrapCandidate(options: {
           fatalErrors += 1;
         }
       }
-      for (const transaction of result.transactions ?? [])
-        transactionRepository.upsert(transaction);
+      for (const transaction of result.transactions ?? []) transactionRepository.upsert(transaction);
     }
 
     const input = {
       ...publicationInputFromStores(store, transactionRepository),
+      presaleProjects: options.presaleProjects ?? [],
       sources: options.results.map((result) => ({
         sourceId: result.sourceId,
         status: result.status,
