@@ -1,4 +1,49 @@
 import { parseNewHousePage } from './parser';
 import type { NewHouseCollectorResult } from './types';
-export function classifyNewHouseHttpFailure(status: number): { status: 'FAILED' | 'PARTIAL'; errorCode: 'ACCESS_DENIED' | 'RATE_LIMITED' | 'HTTP_ERROR'; retryable: boolean } { if (status === 403) return { status: 'FAILED', errorCode: 'ACCESS_DENIED', retryable: false }; if (status === 429) return { status: 'PARTIAL', errorCode: 'RATE_LIMITED', retryable: true }; return { status: 'FAILED', errorCode: 'HTTP_ERROR', retryable: false }; }
-export async function collectNewHousePages(fetchPage: (page: number) => Promise<unknown>, maxPages: number): Promise<NewHouseCollectorResult> { const items = []; const warnings: string[] = []; const errors: string[] = []; let fingerprint = ''; for (let page = 1; page <= maxPages; page += 1) { try { const result = parseNewHousePage(await fetchPage(page), page); if (result.status === 'FAILED') return { ...result, items }; const nextFingerprint = JSON.stringify(result.items.map((item) => item.projectId)); if (nextFingerprint === fingerprint) { warnings.push('PAGINATION_ERROR: duplicate page fingerprint'); break; } fingerprint = nextFingerprint; items.push(...result.items); } catch (error) { errors.push(error instanceof Error ? error.message : 'NETWORK_ERROR'); return { status: items.length ? 'PARTIAL' : 'FAILED', items, fetchedPages: page - 1, warnings, errors }; } } return { status: 'SUCCESS', items, fetchedPages: items.length ? Math.min(maxPages, items.length) : 0, warnings, errors }; }
+export function classifyNewHouseHttpFailure(status: number): {
+  status: 'FAILED' | 'PARTIAL';
+  errorCode: 'ACCESS_DENIED' | 'RATE_LIMITED' | 'HTTP_ERROR';
+  retryable: boolean;
+} {
+  if (status === 403) return { status: 'FAILED', errorCode: 'ACCESS_DENIED', retryable: false };
+  if (status === 429) return { status: 'PARTIAL', errorCode: 'RATE_LIMITED', retryable: true };
+  return { status: 'FAILED', errorCode: 'HTTP_ERROR', retryable: false };
+}
+export async function collectNewHousePages(
+  fetchPage: (page: number) => Promise<unknown>,
+  maxPages: number,
+): Promise<NewHouseCollectorResult> {
+  const items = [];
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  let fingerprint = '';
+  for (let page = 1; page <= maxPages; page += 1) {
+    try {
+      const result = parseNewHousePage(await fetchPage(page), page);
+      if (result.status === 'FAILED') return { ...result, items };
+      const nextFingerprint = JSON.stringify(result.items.map((item) => item.projectId));
+      if (nextFingerprint === fingerprint) {
+        warnings.push('PAGINATION_ERROR: duplicate page fingerprint');
+        break;
+      }
+      fingerprint = nextFingerprint;
+      items.push(...result.items);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : 'NETWORK_ERROR');
+      return {
+        status: items.length ? 'PARTIAL' : 'FAILED',
+        items,
+        fetchedPages: page - 1,
+        warnings,
+        errors,
+      };
+    }
+  }
+  return {
+    status: 'SUCCESS',
+    items,
+    fetchedPages: items.length ? Math.min(maxPages, items.length) : 0,
+    warnings,
+    errors,
+  };
+}

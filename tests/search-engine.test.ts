@@ -99,4 +99,16 @@ describe('search engine', () => {
     expect(sortListings(input, 'PRICE_ASC').map((item) => item.id)).toEqual(['a', 'c', 'b']);
     expect(input.map((item) => item.id)).toEqual(['b', 'a', 'c']);
   });
+  it('sorts recent price drops by event time and keeps listings without drops last', () => {
+    const input = [listing('old'), listing('new'), listing('none')];
+    const drops = new Map([
+      ['old', Date.parse('2026-01-02T00:00:00.000Z')],
+      ['new', Date.parse('2026-01-03T00:00:00.000Z')],
+    ]);
+    expect(sortListings(input, 'PRICE_DROP', drops).map((item) => item.id)).toEqual([
+      'new',
+      'old',
+      'none',
+    ]);
+  });
 });

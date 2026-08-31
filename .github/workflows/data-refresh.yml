@@ -1,0 +1,55 @@
+name: Data Refresh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 0,12 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: homehunt-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    # Actions remain disabled for the local-only product until explicitly enabled.
+    if: ${{ vars.HOMEHUNT_ENABLE_ACTIONS == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Require known-good baseline
+        shell: bash
+        run: test -f public/data/metadata.json
+      - name: Hydrate known-good SQLite state
+        run: npm run data:hydrate -- --input public/data --db data/canonical.sqlite
+      - name: Refresh into isolated candidate
+        id: refresh
+        shell: bash
+        run: |
+          npm run data:refresh -- --candidate | tee refresh-result.json
+          run_id="$(node -e 'const fs=require("fs"); const r=JSON.parse(fs.readFileSync("refresh-result.json","utf8")); process.stdout.write(r.runId)')"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+      - name: Promote validated candidate atomically
+        run: npm run data:refresh:promote -- --run "${{ steps.refresh.outputs.run_id }}"
+      - name: Commit only changed published data
+        shell: bash
+        run: |
+          git add public/data
+          if git diff --cached --quiet; then
+            echo 'No published data changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'data: refresh housing listings'
+          git push

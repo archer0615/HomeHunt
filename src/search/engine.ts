@@ -30,7 +30,8 @@ export type SortOption =
   | 'UNIT_PRICE_ASC'
   | 'UNIT_PRICE_DESC'
   | 'AREA_DESC'
-  | 'AGE_ASC';
+  | 'AGE_ASC'
+  | 'PRICE_DROP';
 export const defaultCriteria: SearchCriteria = {};
 const hardKeywords = ['凶宅', '事故屋', '非自然死亡'];
 const softKeywords = ['頂樓加蓋', '持分'];
@@ -116,7 +117,7 @@ export function matchesCriteria(listing: Listing, criteria: SearchCriteria): boo
     selected(listing.listingType, criteria.listingTypes)
   );
 }
-const keyFor = (listing: Listing, option: SortOption): number | undefined =>
+const keyFor = (listing: Listing, option: SortOption, priceDropAt?: number): number | undefined =>
   ({
     NEWEST: Date.parse(listing.firstSeenAt),
     UPDATED: Date.parse(listing.updatedAt),
@@ -126,12 +127,24 @@ const keyFor = (listing: Listing, option: SortOption): number | undefined =>
     UNIT_PRICE_DESC: listing.unitPrice ?? listing.maxUnitPrice,
     AREA_DESC: listing.mainArea ?? listing.buildingArea ?? listing.maxBuildingArea,
     AGE_ASC: listing.buildingAge,
+    PRICE_DROP: priceDropAt,
   })[option];
-export function sortListings(listings: Listing[], option: SortOption): Listing[] {
-  const desc = ['NEWEST', 'UPDATED', 'PRICE_DESC', 'UNIT_PRICE_DESC', 'AREA_DESC'].includes(option);
+export function sortListings(
+  listings: Listing[],
+  option: SortOption,
+  priceDropAt: ReadonlyMap<string, number> = new Map(),
+): Listing[] {
+  const desc = [
+    'NEWEST',
+    'UPDATED',
+    'PRICE_DESC',
+    'UNIT_PRICE_DESC',
+    'AREA_DESC',
+    'PRICE_DROP',
+  ].includes(option);
   return [...listings].sort((a, b) => {
-    const av = keyFor(a, option);
-    const bv = keyFor(b, option);
+    const av = keyFor(a, option, priceDropAt.get(a.id));
+    const bv = keyFor(b, option, priceDropAt.get(b.id));
     if (av === undefined || bv === undefined)
       return av === bv ? a.id.localeCompare(b.id) : av === undefined ? 1 : -1;
     return av === bv ? a.id.localeCompare(b.id) : (av - bv) * (desc ? -1 : 1);
@@ -142,6 +155,7 @@ export function searchListings(
   criteria: SearchCriteria,
   sort: SortOption,
   customHardKeywords: string[] = [],
+  priceDropAt: ReadonlyMap<string, number> = new Map(),
 ): Listing[] {
   return sortListings(
     listings.filter(
@@ -149,5 +163,6 @@ export function searchListings(
         !isHardExcluded(listing, customHardKeywords) && matchesCriteria(listing, criteria),
     ),
     sort,
+    priceDropAt,
   );
 }

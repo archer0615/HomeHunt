@@ -23,7 +23,10 @@ export interface BootstrapCandidateSummary {
   bootstrapId: string;
   generatedAt: string;
   promotable: boolean;
-  sources: Record<string, { status: SourceResult['status']; records: number; errorMessage?: string }>;
+  sources: Record<
+    string,
+    { status: SourceResult['status']; records: number; errorMessage?: string }
+  >;
   validation: {
     status: 'PASS' | 'FAIL';
     duplicateListingIds: number;
@@ -122,7 +125,8 @@ export async function buildBootstrapCandidate(options: {
           fatalErrors += 1;
         }
       }
-      for (const transaction of result.transactions ?? []) transactionRepository.upsert(transaction);
+      for (const transaction of result.transactions ?? [])
+        transactionRepository.upsert(transaction);
     }
 
     const input = {

@@ -7,9 +7,13 @@ const number = (value: string | undefined): number | undefined => {
   return Number.isFinite(result) && result >= 0 ? result : undefined;
 };
 
-export function normalizePresaleProject(raw: RawPresaleProject, updatedAt = new Date().toISOString()): PresaleProject {
+export function normalizePresaleProject(
+  raw: RawPresaleProject,
+  updatedAt = new Date().toISOString(),
+): PresaleProject {
   const row = raw.raw;
-  const sourceId = text(row['編號']) ?? `${raw.sourceFile}:${row['建案名稱'] ?? row['坐落街道'] ?? 'unknown'}`;
+  const sourceId =
+    text(row['編號']) ?? `${raw.sourceFile}:${row['建案名稱'] ?? row['坐落街道'] ?? 'unknown'}`;
   return {
     id: `moi-presale-registry:${sourceId}`,
     sourceId: 'moi-presale-registry',

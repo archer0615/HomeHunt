@@ -11,7 +11,10 @@ export async function collectPresaleProjects(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60_000);
   try {
-    const response = await fetchImpl(url, { signal: controller.signal, headers: { accept: 'application/zip' } });
+    const response = await fetchImpl(url, {
+      signal: controller.signal,
+      headers: { accept: 'application/zip' },
+    });
     if (!response.ok) throw new Error(`PRESALE_REGISTRY_HTTP:${response.status}`);
     const files = unzipSync(new Uint8Array(await response.arrayBuffer()));
     const manifest = new TextDecoder().decode(files['manifest.csv']);
@@ -23,6 +26,12 @@ export async function collectPresaleProjects(
     }
     return [...cityByFile.entries()]
       .filter(([name]) => name.endsWith('_lvr_buildcase.csv'))
-      .flatMap(([name, city]) => parsePresaleProjects(new TextDecoder().decode(files[name]), name, city).map((row) => normalizePresaleProject(row, updatedAt)));
-  } finally { clearTimeout(timeout); }
+      .flatMap(([name, city]) =>
+        parsePresaleProjects(new TextDecoder().decode(files[name]), name, city).map((row) =>
+          normalizePresaleProject(row, updatedAt),
+        ),
+      );
+  } finally {
+    clearTimeout(timeout);
+  }
 }

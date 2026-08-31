@@ -8,8 +8,11 @@ interface Collector<T> {
   collect(context: CollectorContext): Promise<CollectorResult<T>>;
 }
 interface RawListing<TPayload = unknown> {
-  sourceId: string; sourceListingId?: string; sourceUrl?: string;
-  fetchedAt: string; payload: TPayload;
+  sourceId: string;
+  sourceListingId?: string;
+  sourceUrl?: string;
+  fetchedAt: string;
+  payload: TPayload;
 }
 ```
 

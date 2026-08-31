@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import type { Listing } from '../../shared/domain';
+import type { Listing, ListingEvent } from '../../shared/domain';
 import { EmptyState } from '../components/StatusView';
 import { searchListings, warningsFor, type SortOption } from '../search/engine';
 import { criteriaFromSearch } from '../search/url';
@@ -16,6 +16,7 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'UNIT_PRICE_DESC', label: '單價高到低' },
   { value: 'AREA_DESC', label: '室內坪數大到小' },
   { value: 'AGE_ASC', label: '屋齡新到舊' },
+  { value: 'PRICE_DROP', label: '最近降價' },
 ];
 const price = (item: Listing) =>
   item.totalPrice !== undefined
@@ -24,7 +25,13 @@ const price = (item: Listing) =>
       ? `${((item.minTotalPrice ?? 0) / 10000).toLocaleString()}～${((item.maxTotalPrice ?? 0) / 10000).toLocaleString()} 萬`
       : '價格未提供';
 
-export function SearchPage({ listings }: { listings: Listing[] }) {
+export function SearchPage({
+  listings,
+  events = [],
+}: {
+  listings: Listing[];
+  events?: ListingEvent[];
+}) {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const criteria = criteriaFromSearch(params.toString());
@@ -39,15 +46,20 @@ export function SearchPage({ listings }: { listings: Listing[] }) {
     undoExclude,
   } = usePersonalState();
   const [undoId, setUndoId] = useState<string>();
-  const results = useMemo(
-    () =>
-      searchListings(
-        listings.filter((item) => !states[item.id]?.excluded),
-        criteria,
-        sort,
-      ),
-    [listings, criteria, sort, states],
-  );
+  const results = useMemo(() => {
+    const priceDropAt = new Map(
+      events
+        .filter((event) => event.eventType === 'PRICE_DECREASED')
+        .map((event) => [event.listingId, Date.parse(event.occurredAt)] as const),
+    );
+    return searchListings(
+      listings.filter((item) => !states[item.id]?.excluded),
+      criteria,
+      sort,
+      [],
+      priceDropAt,
+    );
+  }, [listings, criteria, sort, states, events]);
   if (!ready) return <StatusView title="正在載入個人狀態" message="正在準備收藏與已看屋資料…" />;
   if (personalStateError)
     return (
@@ -110,6 +122,14 @@ export function SearchPage({ listings }: { listings: Listing[] }) {
             type="number"
             value={criteria.unitPrice?.max ?? ''}
             onChange={(event) => update('unitPriceMax', event.target.value)}
+          />
+        </label>
+        <label>
+          管理費上限（元/月）
+          <input
+            type="number"
+            value={criteria.managementFee?.max ?? ''}
+            onChange={(event) => update('feeMax', event.target.value)}
           />
         </label>
         <label>

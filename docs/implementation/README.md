@@ -25,22 +25,22 @@ flowchart TD
  P13 --> P14[14 Final Hardening]
 ```
 
-| Phase | 名稱 | 前置 | 可部分平行 | 停止條件 |
-|---|---|---|---|---|
-| 01 | Foundation | 無 | 否 | skeleton 可 build/test/typecheck/lint |
-| 02 | Shared Domain | 01 | 否 | schema、utilities、unit tests 完成 |
-| 03 | MOI Pipeline | 02 | 可與 04 平行 | fixture pipeline 至 SQLite 通過 |
-| 04 | Listing Lifecycle | 02 | 可與 03 平行 | lifecycle 與 history tests 通過 |
-| 05 | 591 Sale | 03、04 | 否 | search crawl fixture 與 isolation 通過 |
-| 06 | 591 NewHouse | 05 | 否 | range/type mapping 通過 |
-| 07 | Data Publication | 03、04、06 | 否 | atomic validation/export 通過 |
-| 08 | PWA Foundation | 07 | 否 | shell、loader、狀態畫面通過 |
-| 09 | Search Filter | 08 | 可與 10 平行 | filter/sort acceptance 通過 |
-| 10 | Personal State | 08 | 可與 09 平行 | IndexedDB persistence 通過 |
-| 11 | Listing Detail | 09、10 | 否 | detail/history/actions 通過 |
-| 12 | PWA Offline | 11 | 否 | offline cache/E2E 通過 |
-| 13 | CI/CD | 12 | 否 | workflows、permissions、refresh controls 通過 |
-| 14 | Final Hardening | 13 | 否 | full quality gate 與 rollback checks 通過 |
+| Phase | 名稱              | 前置       | 可部分平行   | 停止條件                                      |
+| ----- | ----------------- | ---------- | ------------ | --------------------------------------------- |
+| 01    | Foundation        | 無         | 否           | skeleton 可 build/test/typecheck/lint         |
+| 02    | Shared Domain     | 01         | 否           | schema、utilities、unit tests 完成            |
+| 03    | MOI Pipeline      | 02         | 可與 04 平行 | fixture pipeline 至 SQLite 通過               |
+| 04    | Listing Lifecycle | 02         | 可與 03 平行 | lifecycle 與 history tests 通過               |
+| 05    | 591 Sale          | 03、04     | 否           | search crawl fixture 與 isolation 通過        |
+| 06    | 591 NewHouse      | 05         | 否           | range/type mapping 通過                       |
+| 07    | Data Publication  | 03、04、06 | 否           | atomic validation/export 通過                 |
+| 08    | PWA Foundation    | 07         | 否           | shell、loader、狀態畫面通過                   |
+| 09    | Search Filter     | 08         | 可與 10 平行 | filter/sort acceptance 通過                   |
+| 10    | Personal State    | 08         | 可與 09 平行 | IndexedDB persistence 通過                    |
+| 11    | Listing Detail    | 09、10     | 否           | detail/history/actions 通過                   |
+| 12    | PWA Offline       | 11         | 否           | offline cache/E2E 通過                        |
+| 13    | CI/CD             | 12         | 否           | workflows、permissions、refresh controls 通過 |
+| 14    | Final Hardening   | 13         | 否           | full quality gate 與 rollback checks 通過     |
 
 ## Scope Rules
 

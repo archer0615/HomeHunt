@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "appDataVersion": "sha256-6d47fc184d149b5883bc44d233afe58d650075a1a0e49d6d80ffdf2e2fa51087",
+  "generatedAt": "2026-08-25T14:08:56.958Z",
+  "counts": {
+    "listings": 2,
+    "priceHistory": 1,
+    "listingEvents": 2,
+    "transactions": 2
+  },
+  "sources": [
+    {
+      "sourceId": "moi",
+      "status": "SUCCESS",
+      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
+      "itemCount": 2
+    },
+    {
+      "sourceId": "591-sale",
+      "status": "SUCCESS",
+      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
+      "itemCount": 1
+    },
+    {
+      "sourceId": "591-newhouse",
+      "status": "SUCCESS",
+      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
+      "itemCount": 1
+    }
+  ]
+}

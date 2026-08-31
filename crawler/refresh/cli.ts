@@ -22,7 +22,9 @@ const candidateMode = process.argv.includes('--candidate');
 const dataDir = path.resolve('public/data');
 const startedAt = new Date().toISOString();
 const runId = `refresh-${startedAt.replace(/[-:.TZ]/g, '')}`;
-const runRoot = candidateMode ? path.resolve('data/refresh-candidates', runId) : path.resolve('data');
+const runRoot = candidateMode
+  ? path.resolve('data/refresh-candidates', runId)
+  : path.resolve('data');
 const databasePath = path.join(runRoot, 'canonical.sqlite');
 const baselineMarker = path.resolve('data/active-baseline.json');
 
@@ -66,7 +68,10 @@ function sourceFailure(sourceId: string, error: unknown): SourceResult {
 
 async function collectSale(): Promise<SourceResult> {
   if (!saleSourceConfig.liveCollectionEnabled) {
-    return sourceFailure(saleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: response contract not confirmed');
+    return sourceFailure(
+      saleSourceConfig.sourceId,
+      'LIVE_COLLECTION_PAUSED: response contract not confirmed',
+    );
   }
   try {
     const result = await collectSalePages(
@@ -92,7 +97,10 @@ async function collectSale(): Promise<SourceResult> {
 
 async function collectNewHouse(): Promise<SourceResult> {
   if (!newHouseSourceConfig.liveCollectionEnabled) {
-    return sourceFailure(newHouseSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: response contract not confirmed');
+    return sourceFailure(
+      newHouseSourceConfig.sourceId,
+      'LIVE_COLLECTION_PAUSED: response contract not confirmed',
+    );
   }
   try {
     const result = await collectNewHousePages(
@@ -123,7 +131,8 @@ async function collectMoi(database: string): Promise<SourceResult> {
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
     const repository = createTransactionRepository(database);
     try {
-    for (const [file, bytes] of Object.entries(files)) runMoiCsvPipeline(bytes, file, repository, { referenceDate: startedAt });
+      for (const [file, bytes] of Object.entries(files))
+        runMoiCsvPipeline(bytes, file, repository, { referenceDate: startedAt });
     } finally {
       repository.close();
     }
@@ -165,13 +174,7 @@ async function runProduction(): Promise<void> {
   try {
     const previousInput = publicationInputFromStores(lifecycleStore, transactionRepository);
     const moiResult = await collectMoi(databasePath);
-    const results = [
-      moiResult,
-      ...(await Promise.all([
-        collectSale(),
-        collectNewHouse(),
-      ])),
-    ];
+    const results = [moiResult, ...(await Promise.all([collectSale(), collectNewHouse()]))];
     const refresh = runRefresh(results, {
       runId,
       startedAt,

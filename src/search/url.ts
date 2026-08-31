@@ -3,7 +3,9 @@ const list = (params: URLSearchParams, name: string) =>
   params.get(name)?.split(',').filter(Boolean);
 const number = (params: URLSearchParams, name: string) => {
   const value = params.get(name);
-  return value === null ? undefined : Number(value);
+  if (value === null || value.trim() === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 };
 export function criteriaFromSearch(search: string): SearchCriteria {
   const p = new URLSearchParams(search);

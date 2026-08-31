@@ -42,10 +42,24 @@ const input = (ids: string[]): PublicationInput => ({
 describe('data publication', () => {
   it('publishes presale projects separately from listings', async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'homehunt-publication-'));
-    const project: PresaleProject = { id: 'moi-presale-registry:1', sourceId: 'moi-presale-registry', projectName: 'Test', city: '臺北市', sourceUrl: 'https://plvr.land.moi.gov.tw/DownloadOpenData', updatedAt: '2026-01-01T00:00:00.000Z' };
-    await publishData({ ...input(['a']), presaleProjects: [project] }, { targetDir: root, generatedAt: '2026-01-01T00:00:00.000Z' });
-    expect(JSON.parse(await readFile(path.join(root, 'presale-projects.json'), 'utf8'))).toEqual([project]);
-    expect(JSON.parse(await readFile(path.join(root, 'listings', 'all.json'), 'utf8'))).toHaveLength(1);
+    const project: PresaleProject = {
+      id: 'moi-presale-registry:1',
+      sourceId: 'moi-presale-registry',
+      projectName: 'Test',
+      city: '臺北市',
+      sourceUrl: 'https://plvr.land.moi.gov.tw/DownloadOpenData',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    await publishData(
+      { ...input(['a']), presaleProjects: [project] },
+      { targetDir: root, generatedAt: '2026-01-01T00:00:00.000Z' },
+    );
+    expect(JSON.parse(await readFile(path.join(root, 'presale-projects.json'), 'utf8'))).toEqual([
+      project,
+    ]);
+    expect(
+      JSON.parse(await readFile(path.join(root, 'listings', 'all.json'), 'utf8')),
+    ).toHaveLength(1);
   });
 
   it('exports deterministic data and content-based appDataVersion', async () => {

@@ -1,1 +1,21 @@
-{"status":1,"data":{"total":1,"per_page":1,"items":[{"id":"newhouse-fixture-1","name":"測試新建案","type":"預售屋","city":"臺北市","district":"大安區","price":"1800～2600萬","area":"28～45坪","room":"2～4房","address":"臺北市大安區測試路","url":"https://newhouse.591.com.tw/project/newhouse-fixture-1"}]}}
+{
+  "status": 1,
+  "data": {
+    "total": 1,
+    "per_page": 1,
+    "items": [
+      {
+        "id": "newhouse-fixture-1",
+        "name": "測試新建案",
+        "type": "預售屋",
+        "city": "臺北市",
+        "district": "大安區",
+        "price": "1800～2600萬",
+        "area": "28～45坪",
+        "room": "2～4房",
+        "address": "臺北市大安區測試路",
+        "url": "https://newhouse.591.com.tw/project/newhouse-fixture-1"
+      }
+    ]
+  }
+}

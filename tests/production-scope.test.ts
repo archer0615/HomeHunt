@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { bootstrapProductionScope } from '../crawler/bootstrap';
 import { refreshProductionScope } from '../crawler/refresh/orchestrator';
-import { isMoiTransactionInRollingWindow, isProductionCity, isProductionDistrict, moiRollingWindow, PRODUCTION_SCOPE, sourceCityId } from '../crawler/scope/production';
+import {
+  isMoiTransactionInRollingWindow,
+  isProductionCity,
+  isProductionDistrict,
+  moiRollingWindow,
+  PRODUCTION_SCOPE,
+  sourceCityId,
+} from '../crawler/scope/production';
 
 describe('production crawl scope v1', () => {
   it('includes Taipei and New Taipei, but excludes other cities', () => {

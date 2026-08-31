@@ -4,17 +4,137 @@ import { wanToNtd } from '../../../shared/utils';
 import type { Raw591SaleListing } from './types';
 import { isProductionCity } from '../../scope/production';
 
-const number = (value: string | undefined): number | undefined => { if (!value) return undefined; const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/); return match ? Number(match[0]) : undefined; };
-function price(value: string | undefined): number | undefined { if (!value || /待定|洽詢|來電/.test(value)) return undefined; const n = number(value); return n === undefined ? undefined : /萬/.test(value) ? wanToNtd(n) : Math.round(n); }
-function range(value: string | undefined): [number | undefined, number | undefined] { if (!value || /待定|洽詢|來電/.test(value)) return [undefined, undefined]; const values = [...value.replace(/,/g, '').matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0])); if (values.length === 0) return [undefined, undefined]; if (/萬/.test(value)) return [wanToNtd(values[0]!), wanToNtd(values[values.length - 1]!)]; return [Math.round(values[0]!), Math.round(values[values.length - 1]!)]; }
-function areaRange(value: string | undefined): [number | undefined, number | undefined] { if (!value || /待定|未公開/.test(value)) return [undefined, undefined]; const values = [...value.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0])); return values.length ? [values[0], values[values.length - 1]] : [undefined, undefined]; }
-function rooms(value: string | undefined): [number | undefined, number | undefined] { if (!value) return [undefined, undefined]; const values = [...value.matchAll(/\d+/g)].map((match) => Number(match[0])); return values.length ? [values[0], values[values.length - 1]] : [undefined, undefined]; }
-function listingType(value: string | undefined): Listing['listingType'] { if (!value) return 'UNKNOWN'; if (/預售/.test(value)) return 'PRESALE'; if (/新成屋|新古屋/.test(value)) return 'NEW'; if (/中古屋|中古/.test(value)) return 'USED'; return 'UNKNOWN'; }
-function optionalNumber(value: string | undefined): number | undefined { return number(value); }
-function mapBuildingType(value: string | undefined): Listing['buildingType'] { if (!value) return undefined; if (/住宅大樓|大樓/.test(value)) return 'RESIDENTIAL_HIGHRISE'; if (/華廈/.test(value)) return 'MIDRISE'; if (/公寓/.test(value)) return 'APARTMENT'; if (/透天|別墅/.test(value)) return 'TOWNHOUSE'; return 'UNKNOWN'; }
-function mapParking(value: string | undefined): { hasParking?: boolean; parkingType?: Listing['parkingType'] } { if (!value) return {}; if (/坡道平面/.test(value)) return { hasParking: true, parkingType: 'RAMP_FLAT' }; if (/坡道機械/.test(value)) return { hasParking: true, parkingType: 'RAMP_MECHANICAL' }; if (/升降平面/.test(value)) return { hasParking: true, parkingType: 'LIFT_FLAT' }; if (/升降機械/.test(value)) return { hasParking: true, parkingType: 'LIFT_MECHANICAL' }; return { hasParking: true, parkingType: 'UNKNOWN' }; }
-function canonicalId(raw: Raw591SaleListing): string { if (!raw.sourceListingId) throw new Error('VALIDATION_ERROR: missing sourceListingId'); return `591-sale:${raw.sourceListingId}`; }
-export function normalizeSale(raw: Raw591SaleListing, observedAt = new Date().toISOString()): Listing { const [minPrice, maxPrice] = range(raw.totalPriceText); const exactPrice = raw.totalPriceText && !/[~～-]/.test(raw.totalPriceText) ? price(raw.totalPriceText) : undefined; const [minUnit, maxUnit] = range(raw.unitPriceText); const exactUnit = raw.unitPriceText && !/[~～-]/.test(raw.unitPriceText) ? price(raw.unitPriceText) : undefined; const [minArea, maxArea] = areaRange(raw.buildingAreaText); const exactArea = raw.buildingAreaText && !/[~～-]/.test(raw.buildingAreaText) ? number(raw.buildingAreaText) : undefined; const [minRooms, maxRooms] = rooms(raw.roomsText); const parking = mapParking(raw.parkingText); const result = { id: canonicalId(raw), sourceId: '591-sale', sourceListingId: raw.sourceListingId!, listingType: listingType(raw.raw.listingType as string | undefined), title: raw.title, city: raw.city, district: raw.district, address: raw.addressText, totalPrice: exactPrice, unitPrice: exactUnit, minTotalPrice: exactPrice === undefined ? minPrice : undefined, maxTotalPrice: exactPrice === undefined ? maxPrice : undefined, minUnitPrice: exactUnit === undefined ? minUnit : undefined, maxUnitPrice: exactUnit === undefined ? maxUnit : undefined, buildingArea: exactArea, minBuildingArea: exactArea === undefined ? minArea : undefined, maxBuildingArea: exactArea === undefined ? maxArea : undefined, rooms: minRooms === maxRooms ? minRooms : undefined, halls: optionalNumber(raw.hallsText), bathrooms: optionalNumber(raw.bathroomsText), floor: optionalNumber(raw.floorText), totalFloors: optionalNumber(raw.totalFloorsText), buildingAge: optionalNumber(raw.buildingAgeText), buildingType: mapBuildingType(raw.buildingTypeText), ...parking, nearestMrtStation: raw.mrtText, sourceUrl: raw.sourceUrl, status: 'ACTIVE', firstSeenAt: observedAt, lastSeenAt: observedAt, lastCheckedAt: observedAt, relistCount: 0, missingSuccessCount: 0, contentHash: JSON.stringify([raw.title, raw.totalPriceText, raw.unitPriceText, raw.buildingAreaText, raw.roomsText, raw.floorText, raw.buildingTypeText, raw.parkingText]), rawDataHash: JSON.stringify(raw.raw), createdAt: observedAt, updatedAt: observedAt }; return listingSchema.parse(result) as Listing; }
+const number = (value: string | undefined): number | undefined => {
+  if (!value) return undefined;
+  const match = value.replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : undefined;
+};
+function price(value: string | undefined): number | undefined {
+  if (!value || /待定|洽詢|來電/.test(value)) return undefined;
+  const n = number(value);
+  return n === undefined ? undefined : /萬/.test(value) ? wanToNtd(n) : Math.round(n);
+}
+function range(value: string | undefined): [number | undefined, number | undefined] {
+  if (!value || /待定|洽詢|來電/.test(value)) return [undefined, undefined];
+  const values = [...value.replace(/,/g, '').matchAll(/\d+(?:\.\d+)?/g)].map((match) =>
+    Number(match[0]),
+  );
+  if (values.length === 0) return [undefined, undefined];
+  if (/萬/.test(value)) return [wanToNtd(values[0]!), wanToNtd(values[values.length - 1]!)];
+  return [Math.round(values[0]!), Math.round(values[values.length - 1]!)];
+}
+function areaRange(value: string | undefined): [number | undefined, number | undefined] {
+  if (!value || /待定|未公開/.test(value)) return [undefined, undefined];
+  const values = [...value.matchAll(/\d+(?:\.\d+)?/g)].map((match) => Number(match[0]));
+  return values.length ? [values[0], values[values.length - 1]] : [undefined, undefined];
+}
+function rooms(value: string | undefined): [number | undefined, number | undefined] {
+  if (!value) return [undefined, undefined];
+  const values = [...value.matchAll(/\d+/g)].map((match) => Number(match[0]));
+  return values.length ? [values[0], values[values.length - 1]] : [undefined, undefined];
+}
+function listingType(value: string | undefined): Listing['listingType'] {
+  if (!value) return 'UNKNOWN';
+  if (/預售/.test(value)) return 'PRESALE';
+  if (/新成屋|新古屋/.test(value)) return 'NEW';
+  if (/中古屋|中古/.test(value)) return 'USED';
+  return 'UNKNOWN';
+}
+function optionalNumber(value: string | undefined): number | undefined {
+  return number(value);
+}
+function mapBuildingType(value: string | undefined): Listing['buildingType'] {
+  if (!value) return undefined;
+  if (/住宅大樓|大樓/.test(value)) return 'RESIDENTIAL_HIGHRISE';
+  if (/華廈/.test(value)) return 'MIDRISE';
+  if (/公寓/.test(value)) return 'APARTMENT';
+  if (/透天|別墅/.test(value)) return 'TOWNHOUSE';
+  return 'UNKNOWN';
+}
+function mapParking(value: string | undefined): {
+  hasParking?: boolean;
+  parkingType?: Listing['parkingType'];
+} {
+  if (!value) return {};
+  if (/坡道平面/.test(value)) return { hasParking: true, parkingType: 'RAMP_FLAT' };
+  if (/坡道機械/.test(value)) return { hasParking: true, parkingType: 'RAMP_MECHANICAL' };
+  if (/升降平面/.test(value)) return { hasParking: true, parkingType: 'LIFT_FLAT' };
+  if (/升降機械/.test(value)) return { hasParking: true, parkingType: 'LIFT_MECHANICAL' };
+  return { hasParking: true, parkingType: 'UNKNOWN' };
+}
+function canonicalId(raw: Raw591SaleListing): string {
+  if (!raw.sourceListingId) throw new Error('VALIDATION_ERROR: missing sourceListingId');
+  return `591-sale:${raw.sourceListingId}`;
+}
+export function normalizeSale(
+  raw: Raw591SaleListing,
+  observedAt = new Date().toISOString(),
+): Listing {
+  const [minPrice, maxPrice] = range(raw.totalPriceText);
+  const exactPrice =
+    raw.totalPriceText && !/[~～-]/.test(raw.totalPriceText)
+      ? price(raw.totalPriceText)
+      : undefined;
+  const [minUnit, maxUnit] = range(raw.unitPriceText);
+  const exactUnit =
+    raw.unitPriceText && !/[~～-]/.test(raw.unitPriceText) ? price(raw.unitPriceText) : undefined;
+  const [minArea, maxArea] = areaRange(raw.buildingAreaText);
+  const exactArea =
+    raw.buildingAreaText && !/[~～-]/.test(raw.buildingAreaText)
+      ? number(raw.buildingAreaText)
+      : undefined;
+  const [minRooms, maxRooms] = rooms(raw.roomsText);
+  const parking = mapParking(raw.parkingText);
+  const result = {
+    id: canonicalId(raw),
+    sourceId: '591-sale',
+    sourceListingId: raw.sourceListingId!,
+    listingType: listingType(raw.raw.listingType as string | undefined),
+    title: raw.title,
+    city: raw.city,
+    district: raw.district,
+    address: raw.addressText,
+    totalPrice: exactPrice,
+    unitPrice: exactUnit,
+    minTotalPrice: exactPrice === undefined ? minPrice : undefined,
+    maxTotalPrice: exactPrice === undefined ? maxPrice : undefined,
+    minUnitPrice: exactUnit === undefined ? minUnit : undefined,
+    maxUnitPrice: exactUnit === undefined ? maxUnit : undefined,
+    buildingArea: exactArea,
+    minBuildingArea: exactArea === undefined ? minArea : undefined,
+    maxBuildingArea: exactArea === undefined ? maxArea : undefined,
+    rooms: minRooms === maxRooms ? minRooms : undefined,
+    halls: optionalNumber(raw.hallsText),
+    bathrooms: optionalNumber(raw.bathroomsText),
+    floor: optionalNumber(raw.floorText),
+    totalFloors: optionalNumber(raw.totalFloorsText),
+    buildingAge: optionalNumber(raw.buildingAgeText),
+    buildingType: mapBuildingType(raw.buildingTypeText),
+    ...parking,
+    nearestMrtStation: raw.mrtText,
+    sourceUrl: raw.sourceUrl,
+    status: 'ACTIVE',
+    firstSeenAt: observedAt,
+    lastSeenAt: observedAt,
+    lastCheckedAt: observedAt,
+    relistCount: 0,
+    missingSuccessCount: 0,
+    contentHash: JSON.stringify([
+      raw.title,
+      raw.totalPriceText,
+      raw.unitPriceText,
+      raw.buildingAreaText,
+      raw.roomsText,
+      raw.floorText,
+      raw.buildingTypeText,
+      raw.parkingText,
+    ]),
+    rawDataHash: JSON.stringify(raw.raw),
+    createdAt: observedAt,
+    updatedAt: observedAt,
+  };
+  return listingSchema.parse(result) as Listing;
+}
 
 export function normalizeSaleInProduction(raw: Raw591SaleListing, observedAt: string): Listing {
   if (!isProductionCity(raw.city)) throw new Error('OUT_OF_SCOPE: city is not in production scope');

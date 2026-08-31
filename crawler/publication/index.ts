@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { Listing, ListingEvent, PresaleProject, PriceHistory, Transaction } from '../../shared/domain';
+import type {
+  Listing,
+  ListingEvent,
+  PresaleProject,
+  PriceHistory,
+  Transaction,
+} from '../../shared/domain';
 import type { ListingLifecycleStore } from '../lifecycle/store';
 import type { TransactionRepository } from '../persistence/sqlite';
 import {
@@ -43,7 +49,13 @@ export interface PublicationOptions {
 export interface PublicationResult {
   appDataVersion: string;
   generatedAt: string;
-  counts: { listings: number; priceHistory: number; listingEvents: number; transactions: number; presaleProjects: number };
+  counts: {
+    listings: number;
+    priceHistory: number;
+    listingEvents: number;
+    transactions: number;
+    presaleProjects: number;
+  };
   changed: boolean;
 }
 
@@ -113,7 +125,10 @@ function dataForHash(input: PublicationInput, schemaVersion: number): unknown {
       'id',
     ]),
     transactions: sortRecords(input.transactions as unknown as Record<string, unknown>[], ['id']),
-    presaleProjects: sortRecords((input.presaleProjects ?? []) as unknown as Record<string, unknown>[], ['id']),
+    presaleProjects: sortRecords(
+      (input.presaleProjects ?? []) as unknown as Record<string, unknown>[],
+      ['id'],
+    ),
   };
 }
 
@@ -143,7 +158,10 @@ async function writeDataset(
   const transactions = sortRecords(input.transactions as unknown as Record<string, unknown>[], [
     'id',
   ]);
-  const presaleProjects = sortRecords((input.presaleProjects ?? []) as unknown as Record<string, unknown>[], ['id']);
+  const presaleProjects = sortRecords(
+    (input.presaleProjects ?? []) as unknown as Record<string, unknown>[],
+    ['id'],
+  );
   await Promise.all([
     fs.writeFile(path.join(dir, 'metadata.json'), JSON.stringify(metadata, null, 2) + '\n'),
     fs.writeFile(path.join(dir, 'listings', 'all.json'), JSON.stringify(listings, null, 2) + '\n'),
@@ -153,7 +171,10 @@ async function writeDataset(
       path.join(dir, 'transactions', 'all.json'),
       JSON.stringify(transactions, null, 2) + '\n',
     ),
-    fs.writeFile(path.join(dir, 'presale-projects.json'), JSON.stringify(presaleProjects, null, 2) + '\n'),
+    fs.writeFile(
+      path.join(dir, 'presale-projects.json'),
+      JSON.stringify(presaleProjects, null, 2) + '\n',
+    ),
   ]);
 }
 

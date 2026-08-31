@@ -13,6 +13,14 @@ export function buildSaleRequest(city: ProductionCity, page = 1, pageSize = 20):
   if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1) {
     throw new Error('INVALID_REQUEST: page and pageSize must be positive integers');
   }
-  const query = new URLSearchParams({ city_id: sourceCityId('591-sale', city), page: String(page), page_size: String(pageSize) });
-  return { url: `${SALE_ENDPOINT}?${query.toString()}`, method: 'GET', headers: { Accept: 'application/json' } };
+  const query = new URLSearchParams({
+    city_id: sourceCityId('591-sale', city),
+    page: String(page),
+    page_size: String(pageSize),
+  });
+  return {
+    url: `${SALE_ENDPOINT}?${query.toString()}`,
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  };
 }

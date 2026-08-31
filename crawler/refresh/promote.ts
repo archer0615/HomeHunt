@@ -14,7 +14,9 @@ const targetDb = path.join(root, 'canonical.sqlite');
 const targetPublication = path.resolve('public/data');
 await fs.access(sourceDb);
 await fs.access(path.join(sourcePublication, 'metadata.json'));
-const metadata = JSON.parse(await fs.readFile(path.join(sourcePublication, 'metadata.json'), 'utf8')) as { appDataVersion?: string; counts?: unknown };
+const metadata = JSON.parse(
+  await fs.readFile(path.join(sourcePublication, 'metadata.json'), 'utf8'),
+) as { appDataVersion?: string; counts?: unknown };
 if (!metadata.appDataVersion) throw new Error('promotion refused: candidate metadata is invalid');
 const dbStage = `${targetDb}.promote-${runId}`;
 const publicationStage = `${targetPublication}.promote-${runId}`;
@@ -27,13 +29,28 @@ const oldPublication = `${targetPublication}.previous-${runId}`;
 try {
   await fs.rm(oldDb, { force: true });
   await fs.rm(oldPublication, { recursive: true, force: true });
-  try { await fs.rename(targetDb, oldDb); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
-  try { await fs.rename(targetPublication, oldPublication); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+  try {
+    await fs.rename(targetDb, oldDb);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  try {
+    await fs.rename(targetPublication, oldPublication);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
   await fs.rename(dbStage, targetDb);
   await fs.rename(publicationStage, targetPublication);
   await fs.rm(oldDb, { force: true });
   await fs.rm(oldPublication, { recursive: true, force: true });
-  console.log(JSON.stringify({ runId, promoted: true, appDataVersion: metadata.appDataVersion, counts: metadata.counts }));
+  console.log(
+    JSON.stringify({
+      runId,
+      promoted: true,
+      appDataVersion: metadata.appDataVersion,
+      counts: metadata.counts,
+    }),
+  );
 } catch (error) {
   await fs.rm(dbStage, { force: true });
   await fs.rm(publicationStage, { recursive: true, force: true });

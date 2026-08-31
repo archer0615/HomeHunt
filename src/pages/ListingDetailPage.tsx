@@ -34,6 +34,14 @@ const area = (exact: number | undefined, min: number | undefined, max: number | 
       ? `${value(min)}～${value(max)} 坪`
       : '未提供';
 const date = (input: string) => new Date(input).toLocaleString('zh-TW');
+const daysOnMarket = (listing: Listing) => {
+  const end = listing.delistedAt ?? listing.lastSeenAt;
+  const days = Math.max(
+    0,
+    Math.floor((Date.parse(end) - Date.parse(listing.firstSeenAt)) / 86_400_000),
+  );
+  return `${days} 天`;
+};
 export function ListingDetailPage({
   listings,
   histories,
@@ -61,6 +69,9 @@ export function ListingDetailPage({
   const state = states[listing.id];
   const history = histories.filter((item) => item.listingId === listing.id);
   const timeline = events.filter((item) => item.listingId === listing.id);
+  const priceEvents = timeline.filter(
+    (item) => item.eventType === 'PRICE_DECREASED' || item.eventType === 'PRICE_INCREASED',
+  );
   return (
     <article className="detail-page">
       <Link to="/">← 返回搜尋</Link>
@@ -104,6 +115,18 @@ export function ListingDetailPage({
           </button>
         ) : null}
       </div>
+      <section>
+        <h2>圖片</h2>
+        {listing.images?.length ? (
+          <div className="listing-images">
+            {listing.images.map((image) => (
+              <img key={image} src={image} alt="房源照片" loading="lazy" />
+            ))}
+          </div>
+        ) : (
+          <p>圖片未提供。</p>
+        )}
+      </section>
       <section>
         <h2>房屋資訊</h2>
         <dl className="detail-grid">
@@ -154,6 +177,7 @@ export function ListingDetailPage({
             ],
             ['捷運', listing.nearestMrtStation],
             ['首次發現', date(listing.firstSeenAt)],
+            ['上市天數', daysOnMarket(listing)],
             ['最近更新', date(listing.updatedAt)],
           ].map(([key, val]) => (
             <div key={key}>
@@ -195,6 +219,21 @@ export function ListingDetailPage({
           </ol>
         ) : (
           <p>尚無事件紀錄。</p>
+        )}
+      </section>
+      <section>
+        <h2>價格變化</h2>
+        {priceEvents.length ? (
+          <ul className="timeline">
+            {priceEvents.map((event) => (
+              <li key={event.id}>
+                {date(event.occurredAt)}：{labels[event.eventType]}（{value(event.oldValue)} →{' '}
+                {value(event.newValue)}）
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>尚無價格變化紀錄。</p>
         )}
       </section>
       <section>

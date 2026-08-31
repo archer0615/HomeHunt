@@ -97,4 +97,25 @@ describe('listing detail', () => {
     expect(await screen.findByText('找不到此房源')).toBeTruthy();
     await repository.close();
   });
+  it('renders market duration and explicit empty image/price change states', async () => {
+    const repository = new PersonalStateRepository(
+      new PersonalStateDatabase(`empty-${Date.now()}`),
+    );
+    render(
+      <PersonalStateProvider repository={repository}>
+        <MemoryRouter initialEntries={['/listings/591-sale%3Adetail']}>
+          <Routes>
+            <Route
+              path="/listings/:listingId"
+              element={<ListingDetailPage listings={[item]} histories={[]} events={[]} />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </PersonalStateProvider>,
+    );
+    await waitFor(() => expect(screen.getByText('上市天數')).toBeTruthy());
+    expect(screen.getByText('圖片未提供。')).toBeTruthy();
+    expect(screen.getByText('尚無價格變化紀錄。')).toBeTruthy();
+    await repository.close();
+  });
 });

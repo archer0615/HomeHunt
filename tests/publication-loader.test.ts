@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { loadMetadata, publicationUrl } from '../src/data/publication';
+import { loadMetadata, loadPublishedDataset, publicationUrl } from '../src/data/publication';
 
 const metadata = {
   schemaVersion: 1,
@@ -33,5 +33,44 @@ describe('publication loader', () => {
     await expect(loadMetadata(vi.fn().mockRejectedValue(new Error('offline')))).rejects.toThrow(
       '無法連線至公開資料',
     );
+  });
+  it('falls back to the last complete cached dataset when the network fails', async () => {
+    const stores = new Map<string, Map<string, Response>>();
+    const caches = {
+      open: async (name: string) => {
+        const store = stores.get(name) ?? new Map<string, Response>();
+        stores.set(name, store);
+        return {
+          match: async (key: string) => store.get(key)?.clone(),
+          put: async (key: string, response: Response) => {
+            store.set(key, response.clone());
+          },
+        };
+      },
+      keys: async () => [...stores.keys()],
+      delete: async (name: string) => stores.delete(name),
+    };
+    vi.stubGlobal('caches', caches);
+    vi.stubGlobal('localStorage', {
+      values: new Map<string, string>(),
+      getItem(key: string) {
+        return this.values.get(key) ?? null;
+      },
+      setItem(key: string, value: string) {
+        this.values.set(key, value);
+      },
+    });
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/metadata.json')) return new Response(JSON.stringify(metadata));
+      if (url.endsWith('/listings/all.json')) return new Response('[]');
+      return new Response('');
+    });
+    await loadPublishedDataset(fetcher);
+    fetcher.mockRejectedValue(new Error('offline'));
+    const offline = await loadPublishedDataset(fetcher);
+    expect(offline.offline).toBe(true);
+    expect(offline.metadata.appDataVersion).toBe(metadata.appDataVersion);
+    expect(offline.dataset.listings).toEqual([]);
   });
 });

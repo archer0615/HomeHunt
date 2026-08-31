@@ -7,6 +7,7 @@ export function wanToNtd(wan: number): number {
 }
 
 export function ntdPerSquareMeterToNtdPerPing(value: number): number {
-  if (!Number.isFinite(value) || value < 0) throw new Error('Unit price must be finite and non-negative');
+  if (!Number.isFinite(value) || value < 0)
+    throw new Error('Unit price must be finite and non-negative');
   return value * SQM_PER_PING;
 }

@@ -58,6 +58,7 @@ export const listingSchema = z.object({
   nearestMrtStation: optionalText,
   mrtDistanceMeters: optionalNumber,
   sourceUrl: z.string().url().optional(),
+  images: z.array(z.string().url()).optional(),
   status: z.enum(listingStatuses),
   firstSeenAt: isoDateTime,
   lastSeenAt: isoDateTime,

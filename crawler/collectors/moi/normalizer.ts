@@ -2,14 +2,112 @@ import { buildingTypes, type Transaction } from '../../../shared/domain';
 import { transactionSchema } from '../../../shared/schemas';
 import { ntdPerSquareMeterToNtdPerPing, sqmToPing } from '../../../shared/utils';
 import type { RawTransaction } from './types';
-const first = (raw: Record<string, string>, names: string[]): string | undefined => names.map((name) => raw[name]?.trim()).find((value) => value !== undefined && value !== '');
-const numberValue = (value: string | undefined): number | undefined => { if (!value) return undefined; const n = Number(value.replace(/,/g, '')); return Number.isFinite(n) ? n : undefined; };
-const moneyValue = (value: string | undefined): number | undefined => { const n = numberValue(value); return n === undefined ? undefined : Math.round(n); };
-const areaValue = (value: string | undefined): number | undefined => { const n = numberValue(value); return n === undefined ? undefined : sqmToPing(n); };
-export function parseRocDate(value: string | undefined): string | undefined { if (!value) return undefined; const match = value.match(/^(\d{2,3})[./-]?(\d{1,2})[./-]?(\d{1,2})$/); if (!match?.[1] || !match[2] || !match[3]) return undefined; return `${(Number(match[1]) + 1911).toString().padStart(4, '0')}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}T00:00:00+08:00`; }
-export function parseFloor(value: string | undefined): number | undefined { if (!value) return undefined; const underground = value.match(/地下\s*(\d+)/); if (underground?.[1]) return -Number(underground[1]); const chinese = value.match(/([一二三四五六七八九十]+)層/); if (chinese?.[1]) return chineseToNumber(chinese[1]); const numeric = value.match(/-?\d+/); return numeric ? Number(numeric[0]) : undefined; }
-function chineseToNumber(value: string): number { const map: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 }; if (value.length === 1) return map[value] ?? 0; if (value === '十') return 10; if (value.startsWith('十')) return 10 + (map[value[1] ?? ''] ?? 0); if (value.endsWith('十')) return (map[value[0] ?? ''] ?? 0) * 10; return (map[value[0] ?? ''] ?? 0) * 10 + (map[value[2] ?? ''] ?? 0); }
-export function mapBuildingType(value: string | undefined): Transaction['buildingType'] { if (!value) return undefined; if (/住宅大樓|大樓/.test(value)) return buildingTypes[0]; if (/華廈/.test(value)) return 'MIDRISE'; if (/公寓/.test(value)) return 'APARTMENT'; if (/透天|別墅/.test(value)) return 'TOWNHOUSE'; return 'UNKNOWN'; }
-export function mapParkingType(value: string | undefined): Transaction['parkingType'] { if (!value) return undefined; if (/坡道平面/.test(value)) return 'RAMP_FLAT'; if (/坡道機械/.test(value)) return 'RAMP_MECHANICAL'; if (/升降平面/.test(value)) return 'LIFT_FLAT'; if (/升降機械/.test(value)) return 'LIFT_MECHANICAL'; if (/平面/.test(value)) return 'PLANE'; return 'UNKNOWN'; }
-export function transactionId(raw: RawTransaction): string { const keys = ['鄉鎮市區', '交易年月日', '土地位置建物門牌', '總價元', '建物移轉總面積平方公尺', '總樓層數']; return `moi:${keys.map((key) => raw.raw[key] ?? '').join('|')}`; }
-export function normalizeMoi(raw: RawTransaction): Transaction { const r = raw.raw; const tx = { id: transactionId(raw), sourceId: 'moi', transactionType: /預售/.test(first(r, ['交易標的', '備註']) ?? '') ? 'PRESALE' : 'USED', city: first(r, ['縣市']), district: first(r, ['鄉鎮市區']), address: first(r, ['土地位置建物門牌']), transactionDate: parseRocDate(first(r, ['交易年月日', '交易日期'])), totalPrice: moneyValue(first(r, ['總價元', '總價'])), unitPrice: numberValue(first(r, ['單價元平方公尺', '單價元／平方公尺'])), buildingArea: areaValue(first(r, ['建物移轉總面積平方公尺'])), mainArea: areaValue(first(r, ['主建物面積'])), auxiliaryArea: areaValue(first(r, ['附屬建物面積'])), landArea: areaValue(first(r, ['土地移轉總面積平方公尺'])), rooms: numberValue(first(r, ['建物現況格局-房'])), halls: numberValue(first(r, ['建物現況格局-廳'])), bathrooms: numberValue(first(r, ['建物現況格局-衛'])), floor: parseFloor(first(r, ['樓層'])), totalFloors: numberValue(first(r, ['總樓層數'])), buildingType: mapBuildingType(first(r, ['建物型態'])), parkingType: mapParkingType(first(r, ['車位類別'])), parkingPrice: moneyValue(first(r, ['車位總價元'])), hasParking: first(r, ['車位類別']) !== undefined ? true : undefined, createdAt: new Date().toISOString() }; return transactionSchema.parse({ ...tx, unitPrice: tx.unitPrice === undefined ? undefined : ntdPerSquareMeterToNtdPerPing(tx.unitPrice) }); }
+const first = (raw: Record<string, string>, names: string[]): string | undefined =>
+  names.map((name) => raw[name]?.trim()).find((value) => value !== undefined && value !== '');
+const numberValue = (value: string | undefined): number | undefined => {
+  if (!value) return undefined;
+  const n = Number(value.replace(/,/g, ''));
+  return Number.isFinite(n) ? n : undefined;
+};
+const moneyValue = (value: string | undefined): number | undefined => {
+  const n = numberValue(value);
+  return n === undefined ? undefined : Math.round(n);
+};
+const areaValue = (value: string | undefined): number | undefined => {
+  const n = numberValue(value);
+  return n === undefined ? undefined : sqmToPing(n);
+};
+export function parseRocDate(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const match = value.match(/^(\d{2,3})[./-]?(\d{1,2})[./-]?(\d{1,2})$/);
+  if (!match?.[1] || !match[2] || !match[3]) return undefined;
+  return `${(Number(match[1]) + 1911).toString().padStart(4, '0')}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}T00:00:00+08:00`;
+}
+export function parseFloor(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const underground = value.match(/地下\s*(\d+)/);
+  if (underground?.[1]) return -Number(underground[1]);
+  const chinese = value.match(/([一二三四五六七八九十]+)層/);
+  if (chinese?.[1]) return chineseToNumber(chinese[1]);
+  const numeric = value.match(/-?\d+/);
+  return numeric ? Number(numeric[0]) : undefined;
+}
+function chineseToNumber(value: string): number {
+  const map: Record<string, number> = {
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
+    十: 10,
+  };
+  if (value.length === 1) return map[value] ?? 0;
+  if (value === '十') return 10;
+  if (value.startsWith('十')) return 10 + (map[value[1] ?? ''] ?? 0);
+  if (value.endsWith('十')) return (map[value[0] ?? ''] ?? 0) * 10;
+  return (map[value[0] ?? ''] ?? 0) * 10 + (map[value[2] ?? ''] ?? 0);
+}
+export function mapBuildingType(value: string | undefined): Transaction['buildingType'] {
+  if (!value) return undefined;
+  if (/住宅大樓|大樓/.test(value)) return buildingTypes[0];
+  if (/華廈/.test(value)) return 'MIDRISE';
+  if (/公寓/.test(value)) return 'APARTMENT';
+  if (/透天|別墅/.test(value)) return 'TOWNHOUSE';
+  return 'UNKNOWN';
+}
+export function mapParkingType(value: string | undefined): Transaction['parkingType'] {
+  if (!value) return undefined;
+  if (/坡道平面/.test(value)) return 'RAMP_FLAT';
+  if (/坡道機械/.test(value)) return 'RAMP_MECHANICAL';
+  if (/升降平面/.test(value)) return 'LIFT_FLAT';
+  if (/升降機械/.test(value)) return 'LIFT_MECHANICAL';
+  if (/平面/.test(value)) return 'PLANE';
+  return 'UNKNOWN';
+}
+export function transactionId(raw: RawTransaction): string {
+  const keys = [
+    '鄉鎮市區',
+    '交易年月日',
+    '土地位置建物門牌',
+    '總價元',
+    '建物移轉總面積平方公尺',
+    '總樓層數',
+  ];
+  return `moi:${keys.map((key) => raw.raw[key] ?? '').join('|')}`;
+}
+export function normalizeMoi(raw: RawTransaction): Transaction {
+  const r = raw.raw;
+  const tx = {
+    id: transactionId(raw),
+    sourceId: 'moi',
+    transactionType: /預售/.test(first(r, ['交易標的', '備註']) ?? '') ? 'PRESALE' : 'USED',
+    city: first(r, ['縣市']),
+    district: first(r, ['鄉鎮市區']),
+    address: first(r, ['土地位置建物門牌']),
+    transactionDate: parseRocDate(first(r, ['交易年月日', '交易日期'])),
+    totalPrice: moneyValue(first(r, ['總價元', '總價'])),
+    unitPrice: numberValue(first(r, ['單價元平方公尺', '單價元／平方公尺'])),
+    buildingArea: areaValue(first(r, ['建物移轉總面積平方公尺'])),
+    mainArea: areaValue(first(r, ['主建物面積'])),
+    auxiliaryArea: areaValue(first(r, ['附屬建物面積'])),
+    landArea: areaValue(first(r, ['土地移轉總面積平方公尺'])),
+    rooms: numberValue(first(r, ['建物現況格局-房'])),
+    halls: numberValue(first(r, ['建物現況格局-廳'])),
+    bathrooms: numberValue(first(r, ['建物現況格局-衛'])),
+    floor: parseFloor(first(r, ['樓層'])),
+    totalFloors: numberValue(first(r, ['總樓層數'])),
+    buildingType: mapBuildingType(first(r, ['建物型態'])),
+    parkingType: mapParkingType(first(r, ['車位類別'])),
+    parkingPrice: moneyValue(first(r, ['車位總價元'])),
+    hasParking: first(r, ['車位類別']) !== undefined ? true : undefined,
+    createdAt: new Date().toISOString(),
+  };
+  return transactionSchema.parse({
+    ...tx,
+    unitPrice: tx.unitPrice === undefined ? undefined : ntdPerSquareMeterToNtdPerPing(tx.unitPrice),
+  });
+}

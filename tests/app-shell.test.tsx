@@ -60,6 +60,7 @@ describe('application shell', () => {
     resolveFetch?.(responseFor('metadata'));
     await waitFor(() => expect(screen.getByText('符合 1 筆')).toBeTruthy());
     expect(screen.getByRole('navigation', { name: '主要導覽' })).toBeTruthy();
+    expect(screen.getByText(/資料版本 sha256-test/)).toBeTruthy();
   });
   it('renders metadata errors instead of a blank page', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
@@ -72,6 +73,7 @@ describe('application shell', () => {
     vi.stubGlobal('fetch', vi.fn(responseFor));
     render(<App />);
     expect(await screen.findByRole('heading', { name: '收藏' })).toBeTruthy();
+    expect(await screen.findByText('目前沒有資料')).toBeTruthy();
   });
   it('contains component crashes in the error boundary', () => {
     const Thrower = () => {

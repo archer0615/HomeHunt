@@ -21,4 +21,15 @@ describe('personal state repository', () => {
     await expect(second.get('591-sale:b')).resolves.toMatchObject({ excluded: false });
     await second.close();
   });
+  it('keeps personal state separate from published listings', async () => {
+    const name = `test-${Date.now()}-${Math.random()}`;
+    const repository = new PersonalStateRepository(new PersonalStateDatabase(name));
+    await repository.set('591-sale:private', { favorite: true, excluded: true });
+    expect(await repository.getAll()).toHaveLength(1);
+    expect(await repository.get('591-sale:private')).toMatchObject({
+      favorite: true,
+      excluded: true,
+    });
+    await repository.close();
+  });
 });

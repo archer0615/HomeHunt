@@ -16,4 +16,7 @@ describe('search URL state', () => {
     const restored = criteriaFromSearch(criteriaToSearch(value));
     expect(restored).toEqual({ ...value, parkingTypes: ['RAMP_FLAT'] });
   });
+  it('ignores malformed numeric URL values', () => {
+    expect(criteriaFromSearch('rooms=abc&priceMax=NaN')).toEqual({});
+  });
 });

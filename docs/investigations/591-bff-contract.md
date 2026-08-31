@@ -6,9 +6,9 @@
 
 以每個 endpoint 一次、`GET`、Taipei city id `1`、page `1`、page size `1`，並帶公開的 `Accept: application/json` 與識別用 User-Agent 探測：
 
-| Source | Endpoint | 結果 |
-| --- | --- | --- |
-| Sale | `https://bff-house.591.com.tw/v1/web/sale/list` | `unverified`：本機 socket access denied，未收到 HTTP status/body |
+| Source   | Endpoint                                         | 結果                                                             |
+| -------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| Sale     | `https://bff-house.591.com.tw/v1/web/sale/list`  | `unverified`：本機 socket access denied，未收到 HTTP status/body |
 | NewHouse | `https://bff-newhouse.591.com.tw/v1/list-search` | `unverified`：本機 socket access denied，未收到 HTTP status/body |
 
 因此本次沒有 live response 可確認 method 以外的實際 query、Content-Type、status 值、pagination 行為、city/district filtering、headers 必要性、detail enrichment 或 403/429/5xx body。未嘗試重試、繞過、代理、登入或增加請求。
