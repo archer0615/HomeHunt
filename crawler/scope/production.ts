@@ -59,6 +59,8 @@ export const PRODUCTION_SCOPE = {
     moi: { cities: { 臺北市: '臺北市', 新北市: '新北市' } },
     '591-sale': { cities: { 臺北市: '1', 新北市: '3' } },
     '591-newhouse': { cities: { 臺北市: '1', 新北市: '3' } },
+    'yungching-sale': { cities: { 臺北市: '臺北市', 新北市: '新北市' } },
+    'sinyi-sale': { cities: { 臺北市: 'Taipei-city', 新北市: 'NewTaipei-city' } },
   },
   moiTransactionYears: 5,
 } as const;

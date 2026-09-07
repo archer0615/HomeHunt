@@ -1,0 +1,1 @@
+export const sinyiSaleSourceConfig = { sourceId: 'sinyi-sale', baseUrl: 'https://www.sinyi.com.tw/buy/list', liveCollectionEnabled: false, maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;

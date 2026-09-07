@@ -1,0 +1,3 @@
+export interface RawYungchingSaleListing { sourceListingId?: string; title?: string; city?: string; district?: string; addressText?: string; totalPriceText?: string; unitPriceText?: string; buildingAreaText?: string; roomsText?: string; hallsText?: string; bathroomsText?: string; floorText?: string; totalFloorsText?: string; buildingAgeText?: string; buildingTypeText?: string; parkingText?: string; mrtText?: string; sourceUrl?: string; raw: Record<string, unknown>; }
+export type CollectorStatus = 'SUCCESS' | 'PARTIAL' | 'FAILED';
+export interface YungchingCollectorResult { status: CollectorStatus; items: RawYungchingSaleListing[]; fetchedPages: number; warnings: string[]; errors: string[]; }

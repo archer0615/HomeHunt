@@ -26,6 +26,8 @@ npm run local
 
 `Data Sources → Collectors → Raw Data → Normalizers → Validation → Domain Model → SQLite → JSON/NDJSON → Local Validation → Future Hosting Decision`
 
+目前來源包含 MOI、591 售屋／新建案，以及已接入但暫停 live collection 的永慶、信義房屋中古屋 fixture adapter。
+
 ## Documentation Index
 
 - [產品需求](docs/product-requirements.md)

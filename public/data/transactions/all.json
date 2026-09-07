@@ -17,7 +17,7 @@
     "floor": 1,
     "totalFloors": 15,
     "buildingType": "UNKNOWN",
-    "createdAt": "2026-08-25T14:08:55.821Z"
+    "createdAt": "2026-09-07T05:45:17.935Z"
   },
   {
     "id": "moi:信義區|1120101|信義路一段 1 號|25800000|92|12",
@@ -42,6 +42,6 @@
     "hasParking": true,
     "parkingType": "RAMP_FLAT",
     "parkingPrice": 2000000,
-    "createdAt": "2026-08-25T14:08:55.818Z"
+    "createdAt": "2026-09-07T05:45:17.933Z"
   }
 ]

@@ -23,7 +23,7 @@ describe('initial dataset bootstrap', () => {
       results: results(),
     });
     expect(result.summary.promotable).toBe(true);
-    expect(result.summary.validation.listingCount).toBe(2);
+    expect(result.summary.validation.listingCount).toBe(3);
     expect(result.summary.validation.transactionCount).toBe(1);
     const publication = JSON.parse(
       await readFile(path.join(root, 'fixture', 'publication', 'listings', 'all.json'), 'utf8'),
@@ -34,6 +34,21 @@ describe('initial dataset bootstrap', () => {
         (listing) => listing.missingSuccessCount === 0 && listing.relistCount === 0,
       ),
     ).toBe(true);
+    const sale = publication.find((listing) => listing.id === '591-sale:fixture-1');
+    expect(sale).toMatchObject({
+      city: '臺北市',
+      district: '信義區',
+      rooms: 3,
+      buildingType: 'RESIDENTIAL_HIGHRISE',
+      hasParking: true,
+    });
+    const newHouse = publication.find((listing) => listing.id === '591-newhouse:fixture-1');
+    expect(newHouse).toMatchObject({
+      city: '臺北市',
+      district: '大安區',
+      minRooms: 2,
+      maxRooms: 4,
+    });
   });
 
   it('rejects a candidate when a required source fails', async () => {

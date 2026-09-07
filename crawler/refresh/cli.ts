@@ -8,6 +8,17 @@ import { collectSalePages } from '../collectors/591-sale/collector';
 import { saleSourceConfig } from '../collectors/591-sale/config';
 import { normalizeSale } from '../collectors/591-sale/normalizer';
 import type { Raw591SaleListing } from '../collectors/591-sale/types';
+import { yungchingSaleSourceConfig } from '../collectors/yungching-sale/config';
+import { collectYungchingPages } from '../collectors/yungching-sale/collector';
+import { normalizeYungchingSale } from '../collectors/yungching-sale/normalizer';
+import type { RawYungchingSaleListing } from '../collectors/yungching-sale/types';
+import { sinyiSaleSourceConfig } from '../collectors/sinyi-sale/config';
+import { collectSinyiPages } from '../collectors/sinyi-sale/collector';
+import { normalizeSinyiSale } from '../collectors/sinyi-sale/normalizer';
+import { parseSinyiHtml } from '../collectors/sinyi-sale/parser';
+import { buildSinyiSaleRequest } from '../collectors/sinyi-sale/request';
+import { buildYungchingSaleRequest } from '../collectors/yungching-sale/request';
+import { parseYungchingHtml } from '../collectors/yungching-sale/parser';
 import { moiConfig } from '../collectors/moi/config';
 import { discoverCsvFiles, downloadMoiArchive } from '../collectors/moi/downloader';
 import { runMoiCsvPipeline } from '../pipeline/moi';
@@ -53,6 +64,23 @@ async function fetchJsonPage(
     } finally {
       clearTimeout(timeout);
     }
+  }
+  throw new Error('RATE_LIMITED');
+}
+
+async function fetchHtmlPage(url: string, page: number, timeoutMs: number, maxRetries: number): Promise<string> {
+  const request = new URL(url);
+  if (page > 1) request.searchParams.set('pg', String(page));
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(request, { signal: controller.signal, headers: { accept: 'text/html' } });
+      if (response.status === 403) throw new Error('ACCESS_DENIED');
+      if (response.status === 429) { if (attempt === maxRetries) throw new Error('RATE_LIMITED'); await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt)); continue; }
+      if (!response.ok) throw new Error(`HTTP_ERROR:${response.status}`);
+      return await response.text();
+    } finally { clearTimeout(timeout); }
   }
   throw new Error('RATE_LIMITED');
 }
@@ -126,6 +154,24 @@ async function collectNewHouse(): Promise<SourceResult> {
   }
 }
 
+async function collectYungching(): Promise<SourceResult> {
+  if (!yungchingSaleSourceConfig.liveCollectionEnabled) return sourceFailure(yungchingSaleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: public response contract not confirmed');
+  try {
+    const cityResults = await Promise.all((['臺北市', '新北市'] as const).map((city) => collectYungchingPages(async (page) => {
+      const parsed = parseYungchingHtml(await fetchHtmlPage(buildYungchingSaleRequest(city, page).url, page, yungchingSaleSourceConfig.timeoutMs, yungchingSaleSourceConfig.maxRetries), page);
+      if (parsed.status === 'FAILED') throw new Error(parsed.errors.join('; '));
+      return parsed.items;
+    }, yungchingSaleSourceConfig.maxPages)));
+    const result = { status: cityResults.some((item) => item.status === 'PARTIAL') ? 'PARTIAL' as const : cityResults.some((item) => item.status === 'FAILED') ? 'FAILED' as const : 'SUCCESS' as const, items: cityResults.flatMap((item) => item.items), errors: cityResults.flatMap((item) => item.errors), warnings: cityResults.flatMap((item) => item.warnings) };
+    return { sourceId: yungchingSaleSourceConfig.sourceId, status: result.status, observations: result.items.map((item: RawYungchingSaleListing) => normalizeYungchingSale(item, startedAt)), errorMessage: result.errors.join('; ') };
+  } catch (error) { return sourceFailure(yungchingSaleSourceConfig.sourceId, error); }
+}
+
+async function collectSinyi(): Promise<SourceResult> {
+  if (!sinyiSaleSourceConfig.liveCollectionEnabled) return sourceFailure(sinyiSaleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: public response contract not confirmed');
+  try { const results = await Promise.all((['臺北市', '新北市'] as const).map((city) => collectSinyiPages(async (page) => { const parsed = parseSinyiHtml(await fetchHtmlPage(buildSinyiSaleRequest(city, page).url, page, sinyiSaleSourceConfig.timeoutMs, sinyiSaleSourceConfig.maxRetries), page); if (parsed.status === 'FAILED') throw new Error(parsed.errors.join('; ')); return parsed.items; }, sinyiSaleSourceConfig.maxPages))); const observations = results.flatMap((result) => result.items).map((item) => normalizeSinyiSale(item, startedAt)); return { sourceId: sinyiSaleSourceConfig.sourceId, status: results.some((result) => result.status === 'PARTIAL') ? 'PARTIAL' as const : results.some((result) => result.status === 'FAILED') ? 'FAILED' as const : 'SUCCESS' as const, observations, errorMessage: results.flatMap((result) => result.errors).join('; ') }; } catch (error) { return sourceFailure(sinyiSaleSourceConfig.sourceId, error); }
+}
+
 async function collectMoi(database: string): Promise<SourceResult> {
   try {
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
@@ -146,7 +192,7 @@ async function runFixture(): Promise<void> {
   const store = new ListingLifecycleStore();
   try {
     const result = runRefresh(
-      ['moi', '591-sale', '591-newhouse'].map((sourceId) => ({
+      ['moi', '591-sale', '591-newhouse', 'yungching-sale', 'sinyi-sale'].map((sourceId) => ({
         sourceId,
         status: 'SUCCESS' as const,
         observations: [],
@@ -174,7 +220,15 @@ async function runProduction(): Promise<void> {
   try {
     const previousInput = publicationInputFromStores(lifecycleStore, transactionRepository);
     const moiResult = await collectMoi(databasePath);
-    const results = [moiResult, ...(await Promise.all([collectSale(), collectNewHouse()]))];
+    const results = [
+      moiResult,
+      ...(await Promise.all([
+        collectSale(),
+        collectNewHouse(),
+        collectYungching(),
+        collectSinyi(),
+      ])),
+    ];
     const refresh = runRefresh(results, {
       runId,
       startedAt,

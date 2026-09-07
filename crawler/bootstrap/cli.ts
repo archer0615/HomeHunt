@@ -17,6 +17,16 @@ import { normalizeMoiArchive } from '../pipeline/moi';
 import { PRODUCTION_SCOPE } from '../scope/production';
 import { presaleRegistryConfig } from '../collectors/moi-presale-registry/config';
 import { collectPresaleProjects } from '../collectors/moi-presale-registry/collector';
+import { collectYungchingPages } from '../collectors/yungching-sale/collector';
+import { yungchingSaleSourceConfig } from '../collectors/yungching-sale/config';
+import { normalizeYungchingSale } from '../collectors/yungching-sale/normalizer';
+import { parseYungchingHtml } from '../collectors/yungching-sale/parser';
+import { buildYungchingSaleRequest } from '../collectors/yungching-sale/request';
+import { collectSinyiPages } from '../collectors/sinyi-sale/collector';
+import { sinyiSaleSourceConfig } from '../collectors/sinyi-sale/config';
+import { normalizeSinyiSale } from '../collectors/sinyi-sale/normalizer';
+import { parseSinyiHtml } from '../collectors/sinyi-sale/parser';
+import { buildSinyiSaleRequest } from '../collectors/sinyi-sale/request';
 
 const fixture = process.argv.includes('--fixture');
 const observedAt = new Date().toISOString();
@@ -61,6 +71,37 @@ function failed(
     transactions: [],
     errorMessage: error instanceof Error ? error.message : 'SOURCE_ERROR',
   };
+}
+
+async function fetchHtmlPage(
+  url: string,
+  page: number,
+  timeoutMs: number,
+  maxRetries: number,
+): Promise<string> {
+  const request = new URL(url);
+  if (page > 1) request.searchParams.set('pg', String(page));
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(request, {
+        signal: controller.signal,
+        headers: { accept: 'text/html' },
+      });
+      if (response.status === 403) throw new Error('ACCESS_DENIED');
+      if (response.status === 429) {
+        if (attempt === maxRetries) throw new Error('RATE_LIMITED');
+        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+        continue;
+      }
+      if (!response.ok) throw new Error(`HTTP_ERROR:${response.status}`);
+      return await response.text();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw new Error('RATE_LIMITED');
 }
 
 async function collectLiveSale(): Promise<BootstrapSourceResult> {
@@ -139,6 +180,16 @@ async function collectLiveMoi(): Promise<BootstrapSourceResult> {
   }
 }
 
+async function collectLiveYungching(): Promise<BootstrapSourceResult> {
+  if (!yungchingSaleSourceConfig.liveCollectionEnabled) return failed(yungchingSaleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: public response contract not confirmed');
+  try { const results = await Promise.all((['臺北市', '新北市'] as const).map((city) => collectYungchingPages(async (page) => { const parsed = parseYungchingHtml(await fetchHtmlPage(buildYungchingSaleRequest(city, page).url, page, yungchingSaleSourceConfig.timeoutMs, yungchingSaleSourceConfig.maxRetries), page); if (parsed.status === 'FAILED') throw new Error(parsed.errors.join('; ')); return parsed.items; }, yungchingSaleSourceConfig.maxPages))); const observations = results.flatMap((result) => result.items).filter((item) => isProductionCity(item.city) && isProductionDistrict(item.city, item.district)).map((item) => normalizeYungchingSale(item, observedAt) as ListingObservation); return { sourceId: yungchingSaleSourceConfig.sourceId, status: results.some((result) => result.status === 'PARTIAL') ? 'PARTIAL' : results.some((result) => result.status === 'FAILED') ? 'FAILED' : 'SUCCESS', observations, errorMessage: results.flatMap((result) => result.errors).join('; ') }; } catch (error) { return failed(yungchingSaleSourceConfig.sourceId, error); }
+}
+
+async function collectLiveSinyi(): Promise<BootstrapSourceResult> {
+  if (!sinyiSaleSourceConfig.liveCollectionEnabled) return failed(sinyiSaleSourceConfig.sourceId, 'LIVE_COLLECTION_PAUSED: public response contract not confirmed');
+  try { const results = await Promise.all((['臺北市', '新北市'] as const).map((city) => collectSinyiPages(async (page) => { const parsed = parseSinyiHtml(await fetchHtmlPage(buildSinyiSaleRequest(city, page).url, page, sinyiSaleSourceConfig.timeoutMs, sinyiSaleSourceConfig.maxRetries), page); if (parsed.status === 'FAILED') throw new Error(parsed.errors.join('; ')); return parsed.items; }, sinyiSaleSourceConfig.maxPages))); const observations = results.flatMap((result) => result.items).filter((item) => isProductionCity(item.city) && isProductionDistrict(item.city, item.district)).map((item) => normalizeSinyiSale(item, observedAt) as ListingObservation); return { sourceId: sinyiSaleSourceConfig.sourceId, status: results.some((result) => result.status === 'PARTIAL') ? 'PARTIAL' : results.some((result) => result.status === 'FAILED') ? 'FAILED' : 'SUCCESS', observations, errorMessage: results.flatMap((result) => result.errors).join('; ') }; } catch (error) { return failed(sinyiSaleSourceConfig.sourceId, error); }
+}
+
 let result;
 if (fixture) {
   const csv = await fs.readFile(path.resolve('tests/fixtures/moi/transactions.csv'), 'utf8');
@@ -166,7 +217,11 @@ if (fixture) {
       `moi-presale-registry: ${error instanceof Error ? error.message : 'SOURCE_ERROR'}`,
     );
   }
-  const results = [moiResult, saleResult, newHouseResult];
+  const [yungchingResult, sinyiResult] = await Promise.all([
+    collectLiveYungching(),
+    collectLiveSinyi(),
+  ]);
+  const results = [moiResult, saleResult, newHouseResult, yungchingResult, sinyiResult];
   result = await buildBootstrapCandidate({
     candidateRoot: path.resolve('data/bootstrap'),
     bootstrapId: `live-${observedAt.replace(/[-:.TZ]/g, '')}`,

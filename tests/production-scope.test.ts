@@ -37,6 +37,8 @@ describe('production crawl scope v1', () => {
     expect(sourceCityId('591-sale', '新北市')).toBe('3');
     expect(sourceCityId('591-newhouse', '臺北市')).toBe('1');
     expect(sourceCityId('591-newhouse', '新北市')).toBe('3');
+    expect(sourceCityId('sinyi-sale', '臺北市')).toBe('Taipei-city');
+    expect(sourceCityId('sinyi-sale', '新北市')).toBe('NewTaipei-city');
   });
 
   it('uses the same production scope for bootstrap and refresh', () => {

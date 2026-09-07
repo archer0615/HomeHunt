@@ -1,0 +1,1 @@
+export const yungchingSaleSourceConfig = { sourceId: 'yungching-sale', baseUrl: 'https://buy.yungching.com.tw/list', liveCollectionEnabled: false, maxPages: 20, requestDelayMs: 1500, timeoutMs: 30_000, maxRetries: 2, concurrency: 1 } as const;

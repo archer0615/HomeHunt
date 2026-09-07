@@ -1,31 +1,19 @@
 {
   "schemaVersion": 1,
-  "appDataVersion": "sha256-6d47fc184d149b5883bc44d233afe58d650075a1a0e49d6d80ffdf2e2fa51087",
-  "generatedAt": "2026-08-25T14:08:56.958Z",
+  "appDataVersion": "sha256-67be73b8f75e8513ffe05e30e8a7eb541042758ada348d990c5a8880430c2189",
+  "generatedAt": "2026-09-07T05:45:20.870Z",
   "counts": {
-    "listings": 2,
-    "priceHistory": 1,
-    "listingEvents": 2,
-    "transactions": 2
+    "listings": 3,
+    "priceHistory": 2,
+    "listingEvents": 3,
+    "transactions": 2,
+    "presaleProjects": 0
   },
   "sources": [
-    {
-      "sourceId": "moi",
-      "status": "SUCCESS",
-      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
-      "itemCount": 2
-    },
-    {
-      "sourceId": "591-sale",
-      "status": "SUCCESS",
-      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
-      "itemCount": 1
-    },
-    {
-      "sourceId": "591-newhouse",
-      "status": "SUCCESS",
-      "lastAttemptAt": "2026-08-25T14:08:56.958Z",
-      "itemCount": 1
-    }
+    { "sourceId": "moi", "status": "SUCCESS", "lastAttemptAt": "2026-09-07T05:45:20.870Z", "itemCount": 2 },
+    { "sourceId": "591-sale", "status": "SUCCESS", "lastAttemptAt": "2026-09-07T05:45:20.870Z", "itemCount": 1 },
+    { "sourceId": "591-newhouse", "status": "SUCCESS", "lastAttemptAt": "2026-09-07T05:45:20.870Z", "itemCount": 1 },
+    { "sourceId": "yungching-sale", "status": "FAILED", "lastAttemptAt": "2026-09-07T05:45:20.870Z", "itemCount": 0 },
+    { "sourceId": "sinyi-sale", "status": "SUCCESS", "lastAttemptAt": "2026-09-07T05:45:20.870Z", "itemCount": 1 }
   ]
 }
