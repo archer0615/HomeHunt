@@ -98,6 +98,38 @@ describe('data publication', () => {
     ).toHaveLength(10);
   });
 
+  it('preserves known-good transactions when a refresh returns an anomalously small dataset', async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'homehunt-publication-'));
+    const target = path.join(root, 'data');
+    const transactions = Array.from({ length: 10 }, (_, index) => ({
+      id: `moi:${index}`,
+      sourceId: 'moi',
+      transactionType: 'USED' as const,
+      transactionDate: '2025-01-01T00:00:00.000Z',
+      totalPrice: 10_000_000,
+      createdAt: '2025-01-02T00:00:00.000Z',
+    }));
+    const previous = { ...input(['kept']), transactions };
+    await publishData(previous, { targetDir: target, generatedAt: '2026-01-01T00:00:00.000Z' });
+    await expect(
+      publishData(
+        { ...input(['kept']), transactions: [] },
+        {
+          targetDir: target,
+          previousInput: previous,
+          generatedAt: '2026-01-02T00:00:00.000Z',
+          anomalyGuard: {
+            minimumPreviousCount: 5,
+            minimumPreviousTransactions: 5,
+            maximumDropRatio: 0.5,
+          },
+        },
+      ),
+    ).rejects.toThrow('transaction anomaly');
+    expect(
+      JSON.parse(await readFile(path.join(target, 'transactions', 'all.json'), 'utf8')),
+    ).toHaveLength(10);
+  });
   it('reads publication input from the canonical SQLite repositories', () => {
     const lifecycleStore = new ListingLifecycleStore();
     const transactionRepository = createTransactionRepository();

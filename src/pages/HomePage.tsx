@@ -6,7 +6,7 @@ export function HomePage({ metadata }: { metadata: PublicationMetadata }) {
       <div className="page-intro">
         <p className="eyebrow">搜尋入口</p>
         <h2 id="home-title">找到下一個日常落腳處</h2>
-        <p>搜尋、篩選與排序功能將在下一個階段接續加入。</p>
+        <p>使用搜尋條件尋找房源，並查看價格、刊登狀態與本機追蹤資訊。</p>
       </div>
       <div className="data-summary">
         <strong>{metadata.counts.listings.toLocaleString()} 筆房源</strong>
@@ -16,8 +16,8 @@ export function HomePage({ metadata }: { metadata: PublicationMetadata }) {
         <EmptyState />
       ) : (
         <section className="placeholder-panel" aria-label="房源資料狀態">
-          <h3>房源資料已準備</h3>
-          <p>目前先呈現應用程式基礎；房源搜尋介面將在 Phase 09 建立。</p>
+          <h3>房源資料已載入</h3>
+          <p>目前資料僅供本機瀏覽；來源狀態與資料產生時間請查看設定頁。</p>
         </section>
       )}
     </section>

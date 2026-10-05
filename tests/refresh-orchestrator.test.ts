@@ -69,4 +69,17 @@ describe('refresh orchestrator', () => {
     expect(store.getListing(observation.id)?.missingSuccessCount).toBe(0);
     store.close();
   });
+  it('does not apply observations from a failed source result', () => {
+    const store = new ListingLifecycleStore();
+    const result = runRefresh([{ ...source('FAILED'), errorMessage: 'upstream unavailable' }], {
+      runId: 'failed-with-partial-items',
+      startedAt: observation.observedAt,
+      finishedAt: observation.observedAt,
+      store,
+    });
+    expect(result.status).toBe('FAILED');
+    expect(store.getListing(observation.id)).toBeUndefined();
+    expect(store.db.prepare('SELECT status FROM crawl_runs').get()).toEqual({ status: 'FAILED' });
+    store.close();
+  });
 });

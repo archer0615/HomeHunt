@@ -3,6 +3,7 @@ export interface ListingPersonalState {
   favorite: boolean;
   excluded: boolean;
   visited: boolean;
+  tags?: string[];
   updatedAt: string;
 }
 export const emptyPersonalState = (listingId: string): ListingPersonalState => ({

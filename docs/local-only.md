@@ -14,7 +14,7 @@ npm run local
 
 ## 本機資料更新
 
-資料更新由 Windows 工作排程器每日 20:20 執行 candidate refresh：
+資料更新原預定由 Windows 工作排程器每日 20:20 執行 candidate refresh。目前 `HomeHunt Local Candidate Refresh` 排程已停用，等待 MOI 官方下載授權及 591 明確擷取授權；未授權來源不得以手動或排程方式呼叫。腳本僅供取得授權後使用：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-local-refresh.ps1
@@ -39,6 +39,8 @@ npm run data:refresh:promote -- --run <runId>
 ## 離線使用
 
 Chrome 會使用最近一次成功載入的資料。離線時可繼續查看已快取資料與本機個人狀態；重新連線後再由使用者確認新版本。
+
+設定頁可下載及還原個人狀態 JSON 備份。還原前會顯示確認，並以備份內容取代目前瀏覽器中的個人狀態。
 
 ## 不在目前範圍
 

@@ -22,3 +22,11 @@ HomeHunt 是個人住宅房源聚合、搜尋、篩選、追蹤與決策分析 P
 ## Out of Scope
 
 Backend/VPS/Cloud SQL、正式跨裝置同步、SQLite 作 Pages 直接資料源、跨網站去重（僅預留 nullable `propertyId`）、Crawler 繞過 CAPTCHA／驗證／封鎖，以及未要求的 AI 功能。
+
+## 使用者指定後續功能（Phase 15）
+
+詳情可顯示符合條件的 MOI 行政區成交參考；房源可透過 URL 清單比較，最多四筆。成交參考不是估價或地理距離結果。Candidate promote 失敗時必須恢復 known-good canonical DB 與 publication。MOI 官方批次下載受其申請／授權流程限制；591 即時來源需先有可驗證的合法回應契約，未滿足前維持暫停。
+
+## Phase 16 使用者指定子集
+
+只實作本機符合度排序與疑似重複人工檢視提示：符合度依搜尋條件等權計算；跨來源提示不合併、不隱藏資料。AI、帳號、Backend、雲端同步及自訂評分模型仍維持 Deferred / Out of Scope。

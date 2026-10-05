@@ -23,24 +23,28 @@ flowchart TD
  P11 --> P12[12 PWA Offline]
  P12 --> P13[13 CI/CD]
  P13 --> P14[14 Final Hardening]
+ P14 --> P15[15 Market Reference and Comparison]
+ P15 --> P16[16 Local Decision and Duplicate Review]
 ```
 
-| Phase | 名稱              | 前置       | 可部分平行   | 停止條件                                      |
-| ----- | ----------------- | ---------- | ------------ | --------------------------------------------- |
-| 01    | Foundation        | 無         | 否           | skeleton 可 build/test/typecheck/lint         |
-| 02    | Shared Domain     | 01         | 否           | schema、utilities、unit tests 完成            |
-| 03    | MOI Pipeline      | 02         | 可與 04 平行 | fixture pipeline 至 SQLite 通過               |
-| 04    | Listing Lifecycle | 02         | 可與 03 平行 | lifecycle 與 history tests 通過               |
-| 05    | 591 Sale          | 03、04     | 否           | search crawl fixture 與 isolation 通過        |
-| 06    | 591 NewHouse      | 05         | 否           | range/type mapping 通過                       |
-| 07    | Data Publication  | 03、04、06 | 否           | atomic validation/export 通過                 |
-| 08    | PWA Foundation    | 07         | 否           | shell、loader、狀態畫面通過                   |
-| 09    | Search Filter     | 08         | 可與 10 平行 | filter/sort acceptance 通過                   |
-| 10    | Personal State    | 08         | 可與 09 平行 | IndexedDB persistence 通過                    |
-| 11    | Listing Detail    | 09、10     | 否           | detail/history/actions 通過                   |
-| 12    | PWA Offline       | 11         | 否           | offline cache/E2E 通過                        |
-| 13    | CI/CD             | 12         | 否           | workflows、permissions、refresh controls 通過 |
-| 14    | Final Hardening   | 13         | 否           | full quality gate 與 rollback checks 通過     |
+| Phase | 名稱                                | 前置       | 可部分平行   | 停止條件                                      |
+| ----- | ----------------------------------- | ---------- | ------------ | --------------------------------------------- |
+| 01    | Foundation                          | 無         | 否           | skeleton 可 build/test/typecheck/lint         |
+| 02    | Shared Domain                       | 01         | 否           | schema、utilities、unit tests 完成            |
+| 03    | MOI Pipeline                        | 02         | 可與 04 平行 | fixture pipeline 至 SQLite 通過               |
+| 04    | Listing Lifecycle                   | 02         | 可與 03 平行 | lifecycle 與 history tests 通過               |
+| 05    | 591 Sale                            | 03、04     | 否           | search crawl fixture 與 isolation 通過        |
+| 06    | 591 NewHouse                        | 05         | 否           | range/type mapping 通過                       |
+| 07    | Data Publication                    | 03、04、06 | 否           | atomic validation/export 通過                 |
+| 08    | PWA Foundation                      | 07         | 否           | shell、loader、狀態畫面通過                   |
+| 09    | Search Filter                       | 08         | 可與 10 平行 | filter/sort acceptance 通過                   |
+| 10    | Personal State                      | 08         | 可與 09 平行 | IndexedDB persistence 通過                    |
+| 11    | Listing Detail                      | 09、10     | 否           | detail/history/actions 通過                   |
+| 12    | PWA Offline                         | 11         | 否           | offline cache/E2E 通過                        |
+| 13    | CI/CD                               | 12         | 否           | workflows、permissions、refresh controls 通過 |
+| 14    | Final Hardening                     | 13         | 否           | full quality gate 與 rollback checks 通過     |
+| 15    | Market Reference and Comparison     | 14         | 否           | 成交參考、比較與資料更新安全性通過            |
+| 16    | Local Decision and Duplicate Review | 15         | 否           | 透明分數及跨來源疑似重複提示通過              |
 
 ## Scope Rules
 
@@ -52,6 +56,8 @@ Phase 1 不做跨網站 Property 去重、AI、估價模型、多人帳號、登
 
 - Phase 03 開始前決定 Node.js 22 相容且最小的 SQLite driver。
 - Phase 08 開始 UI 實作前決定 CSS/UI solution。
+- Phase 15 為使用者明確要求的 Phase 14 後續範圍；不得將尚未驗證的來源契約視為 live 可用。
+- Phase 16 僅執行使用者核准的 local-only 子集，不代表恢復完整 Decision Engine、AI、Backend 或同步範圍。
 
 兩者皆不阻擋 Phase 01。
 

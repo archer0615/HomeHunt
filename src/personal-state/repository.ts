@@ -22,7 +22,7 @@ export class PersonalStateRepository {
   }
   async set(
     listingId: string,
-    patch: Partial<Pick<ListingPersonalState, 'favorite' | 'excluded' | 'visited'>>,
+    patch: Partial<Pick<ListingPersonalState, 'favorite' | 'excluded' | 'visited' | 'tags'>>,
   ): Promise<ListingPersonalState> {
     const current = await this.get(listingId);
     const next: ListingPersonalState = {
@@ -30,11 +30,18 @@ export class PersonalStateRepository {
       favorite: current?.favorite ?? false,
       excluded: current?.excluded ?? false,
       visited: current?.visited ?? false,
+      ...(current?.tags ? { tags: current.tags } : {}),
       ...patch,
       updatedAt: new Date().toISOString(),
     };
     await this.db.states.put(next);
     return next;
+  }
+  async replaceAll(states: ListingPersonalState[]): Promise<void> {
+    await this.db.transaction('rw', this.db.states, async () => {
+      await this.db.states.clear();
+      await this.db.states.bulkAdd(states);
+    });
   }
   async close(): Promise<void> {
     this.db.close();

@@ -43,7 +43,11 @@ export interface PublicationOptions {
   generatedAt?: string;
   previousInput?: PublicationInput;
   allowEmpty?: boolean;
-  anomalyGuard?: { minimumPreviousCount: number; maximumDropRatio: number };
+  anomalyGuard?: {
+    minimumPreviousCount: number;
+    maximumDropRatio: number;
+    minimumPreviousTransactions?: number;
+  };
 }
 
 export interface PublicationResult {
@@ -190,7 +194,9 @@ async function validatePublished(dir: string): Promise<void> {
   )
     throw new Error('published metadata is invalid');
   JSON.parse(await fs.readFile(path.join(dir, 'listings', 'all.json'), 'utf8'));
-  JSON.parse(await fs.readFile(path.join(dir, 'transactions', 'all.json'), 'utf8'));
+  transactionSchema
+    .array()
+    .parse(JSON.parse(await fs.readFile(path.join(dir, 'transactions', 'all.json'), 'utf8')));
   JSON.parse(await fs.readFile(path.join(dir, 'presale-projects.json'), 'utf8'));
   for (const file of ['price.ndjson', 'events.ndjson'])
     for (const line of (await fs.readFile(path.join(dir, 'history', file), 'utf8'))
@@ -207,6 +213,7 @@ export async function publishData(
   const generatedAt = options.generatedAt ?? new Date().toISOString();
   validateInput(input, options.allowEmpty ?? false);
   const previousCount = options.previousInput?.listings.length ?? 0;
+  const previousTransactionCount = options.previousInput?.transactions.length ?? 0;
   const guard = options.anomalyGuard ?? { minimumPreviousCount: 100, maximumDropRatio: 0.8 };
   if (
     previousCount >= guard.minimumPreviousCount &&
@@ -214,6 +221,13 @@ export async function publishData(
   )
     throw new Error(
       `publication rejected: listing anomaly (${previousCount} -> ${input.listings.length})`,
+    );
+  if (
+    previousTransactionCount >= (guard.minimumPreviousTransactions ?? guard.minimumPreviousCount) &&
+    input.transactions.length < previousTransactionCount * (1 - guard.maximumDropRatio)
+  )
+    throw new Error(
+      `publication rejected: transaction anomaly (${previousTransactionCount} -> ${input.transactions.length})`,
     );
   const digest = createHash('sha256')
     .update(stableJson(dataForHash(input, schemaVersion)))
@@ -247,19 +261,31 @@ export async function publishData(
     /* first publication */
   }
   if (changed) {
+    let backedUp = false;
     try {
+      await fs.rm(backup, { recursive: true, force: true });
       await fs.rename(target, backup);
+      backedUp = true;
     } catch (error: unknown) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }
     try {
-      await fs.rename(staging, target);
-    } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code !== 'EPERM') throw error;
-      await fs.cp(staging, target, { recursive: true });
+      try {
+        await fs.rename(staging, target);
+      } catch (error: unknown) {
+        if ((error as NodeJS.ErrnoException).code !== 'EPERM') throw error;
+        await fs.cp(staging, target, { recursive: true });
+        await fs.rm(staging, { recursive: true, force: true });
+      }
+    } catch (error) {
+      await fs.rm(target, { recursive: true, force: true });
+      if (backedUp) {
+        await fs.rename(backup, target);
+      }
       await fs.rm(staging, { recursive: true, force: true });
+      throw error;
     }
-    await fs.rm(backup, { recursive: true, force: true });
+    if (backedUp) await fs.rm(backup, { recursive: true, force: true });
   } else await fs.rm(staging, { recursive: true, force: true });
   return { appDataVersion, generatedAt, counts: metadata.counts, changed };
 }

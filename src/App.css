@@ -105,6 +105,14 @@ h3 {
 .muted {
   color: #567087;
 }
+.data-notice {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-left: 0.25rem solid #b87816;
+  border-radius: 0.35rem;
+  background: #fff4d6;
+  color: #704d00;
+}
 .status-view {
   text-align: center;
 }
@@ -176,6 +184,44 @@ h3 {
   background: #fff;
   color: #17324d;
   cursor: pointer;
+}
+.search-controls .range-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid #d8e4ed;
+  border-radius: 0.5rem;
+}
+.range-filter legend {
+  padding: 0 0.25rem;
+  font-weight: 600;
+}
+.search-presets,
+.search-presets span,
+.collection-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.search-presets button,
+.collection-controls input,
+.collection-controls select {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #aac0d0;
+  border-radius: 0.45rem;
+  background: #fff;
+}
+.collection-controls label {
+  display: grid;
+  gap: 0.3rem;
+}
+.search-controls select[multiple] {
+  min-height: 6rem;
 }
 .result-count {
   font-weight: 700;
@@ -281,6 +327,52 @@ h3 {
   background: #fff;
   color: #17324d;
   cursor: pointer;
+}
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #315b7d;
+  border-radius: 0.45rem;
+  color: #17324d;
+  text-decoration: none;
+}
+.compare-table-wrap {
+  overflow-x: auto;
+}
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.compare-table th,
+.compare-table td {
+  min-width: 9rem;
+  padding: 0.7rem;
+  border: 1px solid #d8e4ed;
+  text-align: left;
+  vertical-align: top;
+}
+.compare-table th:first-child {
+  min-width: 7rem;
+  background: #f5f8fb;
+}
+.compare-table button {
+  display: block;
+  margin-top: 0.5rem;
+}
+.match-score {
+  color: #075b53;
+  font-weight: 700;
+}
+.possible-duplicate {
+  padding: 0.65rem;
+  border-left: 4px solid #d99b24;
+  background: #fff8e5;
+}
+.possible-duplicate a + a {
+  margin-left: 0.5rem;
 }
 @media (max-width: 500px) {
   .detail-grid {

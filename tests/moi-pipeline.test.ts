@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { assertMoiLiveDownloadEnabled, moiConfig } from '../crawler/collectors/moi/config';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -20,6 +21,10 @@ import { normalizeMoiArchive, runMoiCsvPipeline } from '../crawler/pipeline/moi'
 import { createTransactionRepository } from '../crawler/persistence/sqlite';
 const csv = readFileSync(resolve('tests/fixtures/moi/transactions.csv'));
 describe('MOI pipeline', () => {
+  it('keeps live archive download paused until authorization is confirmed', () => {
+    expect(moiConfig.liveDownloadEnabled).toBe(false);
+    expect(() => assertMoiLiveDownloadEnabled()).toThrow(/LIVE_DOWNLOAD_PAUSED/);
+  });
   it('parses CSV rows', () => {
     expect(parseCsvBytes(csv, 'transactions.csv')).toHaveLength(2);
   });

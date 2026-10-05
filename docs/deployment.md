@@ -18,7 +18,7 @@ flowchart TD
 
 原規格的 Phase 1 Hosting 為 GitHub Pages；目前暫停實際使用。Frontend 為 React/Vite/TypeScript/PWA。未解除暫停前，不得將 Pages 作為靜態 Frontend、Published JSON/NDJSON 或 PWA assets 的正式入口。Pages 不執行 Crawler、SQLite runtime、Server API 或 Background Job。Crawler 主要在 GitHub Actions 執行，Local 是 fallback；不建立 Backend、VPS、Cloud SQL、AWS/Azure Backend 或 SSR。
 
-目前明確採 Local-only 模式。正式部署不在範圍內；本機預覽使用 `npm run local`，資料更新由 Windows Task Scheduler 每日 20:20 執行。此文件的雲端部署規格保留作為未來參考，不代表目前已啟用。
+目前明確採 Local-only 模式。正式部署不在範圍內；本機預覽使用 `npm run local`，Windows Task Scheduler 每日 20:20 候選更新工作目前已停用，待 MOI 官方授權與 591 明確擷取授權／契約確認後再啟用。此文件的雲端部署規格保留作為未來參考，不代表目前已啟用。
 
 ## Workflow Separation
 
@@ -99,4 +99,4 @@ Application rollback 使用上一個 known-good Git commit；Data rollback 與 A
 - **DEP13–DEP16**：無資料變更不空 commit；Actions least privilege；Application/Data 可由 Git rollback；正確處理 repository base path。
 - **DEP17–DEP20**：Concurrency 防止並行 refresh；anomaly guard 阻擋異常資料；單一 Source FAILED 不影響其他來源；未實際通過 build/test 不得部署。
 
-本文件只定義規格；尚未建立 workflow、啟用 Pages、下載 MOI、抓取 591、建立 dataset、Service Worker 或 deployment script。
+目前 repository 已保留 `.github/workflows/ci.yml`、`data-refresh.yml`、`pages.yml`，但 Data Refresh 與 Pages 工作受 repository variables 閘控，且部署規格維持停用；不得因 workflow 檔存在而視為已啟用。Vite PWA plugin 會在 build 時產生 Service Worker。Local-only 預覽與本機排程腳本已建立，`public/data/` 含目前本機使用的公開資料檔。MOI 尚未執行 live download，591 尚未連線收集。此處狀態需隨實作更新，不能作為部署或來源授權證明。

@@ -4,7 +4,8 @@ import {
   type PublicationMetadata,
 } from '../../shared/schemas';
 import type { Listing } from '../../shared/domain';
-import type { ListingEvent, PriceHistory } from '../../shared/domain';
+import type { ListingEvent, PriceHistory, Transaction } from '../../shared/domain';
+import { transactionSchema } from '../../shared/schemas';
 export type { PublicationMetadata } from '../../shared/schemas';
 
 export const SUPPORTED_PUBLICATION_SCHEMA_VERSION = 1;
@@ -12,6 +13,7 @@ export const PUBLICATION_RESOURCES = [
   'listings/all.json',
   'history/price.ndjson',
   'history/events.ndjson',
+  'transactions/all.json',
 ] as const;
 const DATA_CACHE_PREFIX = 'homehunt-data-';
 const ACTIVE_VERSION_KEY = 'homehunt-active-app-data-version';
@@ -52,7 +54,9 @@ async function readCachedDataset(
   );
   if (responses.some((response) => !response)) return undefined;
   const [listingsResponse, historyResponse, eventsResponse] = responses;
-  if (!listingsResponse || !historyResponse || !eventsResponse) return undefined;
+  const transactionsResponse = responses[3];
+  if (!listingsResponse || !historyResponse || !eventsResponse || !transactionsResponse)
+    return undefined;
   try {
     const listings = listingSchema.array().parse(await listingsResponse.json());
     const priceHistory = (await historyResponse.text())
@@ -63,7 +67,8 @@ async function readCachedDataset(
       .split('\n')
       .filter(Boolean)
       .map((line) => JSON.parse(line) as ListingEvent);
-    return { listings, priceHistory, events };
+    const transactions = transactionSchema.array().parse(await transactionsResponse.json());
+    return { listings, priceHistory, events, transactions };
   } catch (error) {
     throw new PublicationError('已快取的公開資料格式無效。', { cause: error });
   }
@@ -133,15 +138,26 @@ async function loadNdjson<T>(resource: string, fetcher: typeof fetch): Promise<T
     .filter(Boolean)
     .map((line) => JSON.parse(line) as T);
 }
-export async function loadListingDetailData(
-  fetcher: typeof fetch = fetch,
-): Promise<{ listings: Listing[]; priceHistory: PriceHistory[]; events: ListingEvent[] }> {
-  const [listings, priceHistory, events] = await Promise.all([
+export async function loadListingDetailData(fetcher: typeof fetch = fetch): Promise<{
+  listings: Listing[];
+  priceHistory: PriceHistory[];
+  events: ListingEvent[];
+  transactions: Transaction[];
+}> {
+  const [listings, priceHistory, events, transactions] = await Promise.all([
     loadListings(fetcher),
     loadNdjson<PriceHistory>('history/price.ndjson', fetcher),
     loadNdjson<ListingEvent>('history/events.ndjson', fetcher),
+    loadJsonTransactions(fetcher),
   ]);
-  return { listings, priceHistory, events };
+  return { listings, priceHistory, events, transactions };
+}
+async function loadJsonTransactions(fetcher: typeof fetch): Promise<Transaction[]> {
+  const response = await fetcher(publicationUrl('transactions/all.json'));
+  if (!response.ok) throw new PublicationError(`成交資料無法取得（HTTP ${response.status}）。`);
+  const parsed = transactionSchema.array().safeParse(await response.json());
+  if (!parsed.success) throw new PublicationError('成交資料結構無效。');
+  return parsed.data;
 }
 export async function loadPublishedDataset(fetcher: typeof fetch = fetch): Promise<{
   metadata: PublicationMetadata;

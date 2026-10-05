@@ -1,4 +1,5 @@
 import type { BuildingType, Listing, ListingType, ParkingType } from '../../shared/domain';
+import { decisionScore } from './decision';
 
 export interface Range {
   min?: number;
@@ -31,7 +32,8 @@ export type SortOption =
   | 'UNIT_PRICE_DESC'
   | 'AREA_DESC'
   | 'AGE_ASC'
-  | 'PRICE_DROP';
+  | 'PRICE_DROP'
+  | 'BEST_MATCH';
 export const defaultCriteria: SearchCriteria = {};
 const hardKeywords = ['凶宅', '事故屋', '非自然死亡'];
 const softKeywords = ['頂樓加蓋', '持分'];
@@ -128,6 +130,7 @@ const keyFor = (listing: Listing, option: SortOption, priceDropAt?: number): num
     AREA_DESC: listing.mainArea ?? listing.buildingArea ?? listing.maxBuildingArea,
     AGE_ASC: listing.buildingAge,
     PRICE_DROP: priceDropAt,
+    BEST_MATCH: undefined,
   })[option];
 export function sortListings(
   listings: Listing[],
@@ -157,12 +160,19 @@ export function searchListings(
   customHardKeywords: string[] = [],
   priceDropAt: ReadonlyMap<string, number> = new Map(),
 ): Listing[] {
-  return sortListings(
-    listings.filter(
-      (listing) =>
-        !isHardExcluded(listing, customHardKeywords) && matchesCriteria(listing, criteria),
-    ),
-    sort,
-    priceDropAt,
+  const matches = listings.filter(
+    (listing) => !isHardExcluded(listing, customHardKeywords) && matchesCriteria(listing, criteria),
   );
+  if (sort === 'BEST_MATCH') {
+    const hasCriteria = Object.values(criteria).some((value) =>
+      Array.isArray(value) ? value.length > 0 : value !== undefined,
+    );
+    if (!hasCriteria) return sortListings(matches, 'NEWEST', priceDropAt);
+    return [...matches].sort((left, right) => {
+      const leftScore = decisionScore(left, criteria) ?? -1;
+      const rightScore = decisionScore(right, criteria) ?? -1;
+      return rightScore - leftScore || left.id.localeCompare(right.id);
+    });
+  }
+  return sortListings(matches, sort, priceDropAt);
 }

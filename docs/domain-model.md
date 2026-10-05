@@ -7,7 +7,7 @@
 - **PriceHistory**：`listingId`、`totalPrice`、`unitPrice`、`parkingPrice`、`observedAt`，只在價格改變時新增。
 - **ListingEvent**：`LISTING_DISCOVERED`、`PRICE_DECREASED`、`PRICE_INCREASED`、`MARKED_MISSING`、`RESTORED`、`DELISTED`、`RELISTED`、`CONTENT_CHANGED`，含 old/new value、metadata、occurredAt。
 - **Transaction**：MOI 實際成交，與 Listing 開價分離；Phase 1 支援 USED/PRESALE。
-- **UserState**：收藏、永久排除、已看屋及預留 notes/rating/contacted/visitDate/tags，僅 IndexedDB。
+- **UserState**：收藏、永久排除、已看屋與本機標籤及預留 notes/rating/contacted/visitDate，僅 IndexedDB。
 - **CrawlRun**：SUCCESS、PARTIAL、FAILED 與統計。
 - **RawSnapshot**：新 Listing 或 `rawDataHash` 改變才保存，每 Listing 最近 5 份。
 
@@ -36,3 +36,9 @@ erDiagram
  CRAWL_RUN ||--o{ RAW_SNAPSHOT : produces
  LISTING }o--o| PROPERTY : future
 ```
+
+## Phase 16 — 本機決策與重複候選審查
+
+決策符合度只量測 Listing 對使用者目前已啟用篩選條件的吻合程度；各條件等權，不能被呈現為價格估值、投資建議或整體房屋品質。未設定篩選條件時不顯示分數。
+
+跨來源疑似重複以城市、行政區、完整正規化地址及可得之權狀坪數（±3%）、房數、樓層比對。提示可人工開啟兩筆房源；不自動隱藏、合併或指定 propertyId。

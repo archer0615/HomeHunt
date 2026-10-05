@@ -39,6 +39,19 @@ export function runRefresh(results: SourceResult[], options: RefreshOptions): Re
   let histories = 0;
   let events = 0;
   for (const result of results) {
+    if (result.status === 'FAILED') {
+      const run: CrawlRunInput = {
+        id: `${options.runId}:${result.sourceId}`,
+        sourceId: result.sourceId,
+        startedAt: options.startedAt,
+        finishedAt: options.finishedAt,
+        status: result.status,
+        listingCount: 0,
+        errorMessage: result.errorMessage,
+      };
+      reconcileMissing(options.store, run, new Set());
+      continue;
+    }
     for (const observation of result.observations) {
       const lifecycle = processListingObservation(options.store, observation);
       if (lifecycle.priceHistory) histories += 1;

@@ -19,7 +19,7 @@ import { parseSinyiHtml } from '../collectors/sinyi-sale/parser';
 import { buildSinyiSaleRequest } from '../collectors/sinyi-sale/request';
 import { buildYungchingSaleRequest } from '../collectors/yungching-sale/request';
 import { parseYungchingHtml } from '../collectors/yungching-sale/parser';
-import { moiConfig } from '../collectors/moi/config';
+import { assertMoiLiveDownloadEnabled, moiConfig } from '../collectors/moi/config';
 import { discoverCsvFiles, downloadMoiArchive } from '../collectors/moi/downloader';
 import { runMoiCsvPipeline } from '../pipeline/moi';
 import { ListingLifecycleStore } from '../lifecycle/store';
@@ -174,6 +174,7 @@ async function collectSinyi(): Promise<SourceResult> {
 
 async function collectMoi(database: string): Promise<SourceResult> {
   try {
+    assertMoiLiveDownloadEnabled();
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
     const repository = createTransactionRepository(database);
     try {

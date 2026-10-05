@@ -118,4 +118,26 @@ describe('listing detail', () => {
     expect(screen.getByText('尚無價格變化紀錄。')).toBeTruthy();
     await repository.close();
   });
+  it('keeps existing comparison ids when opening the detail page', async () => {
+    const repository = new PersonalStateRepository(
+      new PersonalStateDatabase(`compare-${Date.now()}`),
+    );
+    render(
+      <PersonalStateProvider repository={repository}>
+        <MemoryRouter
+          initialEntries={[`/listings/${encodeURIComponent(item.id)}?ids=other-listing`]}
+        >
+          <Routes>
+            <Route
+              path="/listings/:listingId"
+              element={<ListingDetailPage listings={[item]} histories={[]} events={[]} />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </PersonalStateProvider>,
+    );
+    const compareLink = await screen.findByRole('link', { name: '加入房源比較（1/4）' });
+    expect(compareLink.getAttribute('href')).toBe('/compare?ids=other-listing%2C591-sale%3Adetail');
+    await repository.close();
+  });
 });

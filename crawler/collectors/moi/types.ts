@@ -4,6 +4,7 @@ export interface RawTransaction {
   raw: Record<string, string>;
 }
 export interface MoiConfig {
+  liveDownloadEnabled: boolean;
   sourceId: 'moi';
   downloadUrl: string;
   timeoutMs: number;

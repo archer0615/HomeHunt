@@ -8,7 +8,7 @@
 
 ## 目前限制
 
-目前產品採 Local-only 模式：GitHub Actions、GitHub Pages 與 Production deployment 均停用。資料 refresh 改由 Windows Task Scheduler 每日 20:20 執行 `scripts/run-local-refresh.ps1`；失敗只寫入 `data/logs/refresh.log`，不跳出視窗，也不覆蓋 known-good dataset。
+目前產品採 Local-only 模式：GitHub Actions、GitHub Pages 與 Production deployment 均停用。資料 refresh 原預定由 Windows Task Scheduler 每日 20:20 執行 `scripts/run-local-refresh.ps1`；目前該排程已停用，直到 MOI 與 591 live 來源授權／契約確認；失敗只寫入 `data/logs/refresh.log`，不跳出視窗，也不覆蓋 known-good dataset。
 
 GitHub Pages deployment、Production URL validation 與 PWA production validation 目前暫停，不得將 Pages workflow 或 404 的 Production URL 作為 HomeHunt 正式部署依據。Production App 尚未正式上線；近期驗證以 Local Build、Local Preview、Offline Browser、Fixture Data 與 Repository CI 為準。Data Refresh 不依賴 GitHub Pages，且仍須驗證 MOI refresh、591 adapters 的 paused／安全狀態、Candidate／Publication artifact、known-good baseline protection 與失敗時不覆蓋既有資料。
 

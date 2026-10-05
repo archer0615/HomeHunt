@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Listing, ListingEvent, PriceHistory } from '../../shared/domain';
 import { StatusView } from '../components/StatusView';
 import { usePersonalState } from '../personal-state/context';
+import type { Transaction } from '../../shared/domain';
+import {
+  addCompareId,
+  compareIdsFromUrl,
+  findComparableTransactions,
+} from '../search/market-reference';
 
 const labels: Record<string, string> = {
   USED: '中古屋',
@@ -46,13 +52,16 @@ export function ListingDetailPage({
   listings,
   histories,
   events,
+  transactions = [],
 }: {
   listings: Listing[];
   histories: PriceHistory[];
   events: ListingEvent[];
+  transactions?: Transaction[];
 }) {
   const { listingId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const listing = listings.find((item) => item.id === decodeURIComponent(listingId ?? ''));
   const { ready, states, toggleFavorite, toggleVisited, exclude, undoExclude } = usePersonalState();
   const [undo, setUndo] = useState(false);
@@ -72,6 +81,12 @@ export function ListingDetailPage({
   const priceEvents = timeline.filter(
     (item) => item.eventType === 'PRICE_DECREASED' || item.eventType === 'PRICE_INCREASED',
   );
+  const comparables = findComparableTransactions(listing, transactions);
+  const compareIds = compareIdsFromUrl(searchParams.get('ids') ?? searchParams.get('compare'));
+  const nextCompareIds = addCompareId(compareIds, listing.id);
+  const compareQuery = new URLSearchParams();
+  if (nextCompareIds.length) compareQuery.set('ids', nextCompareIds.join(','));
+  if (searchParams.has('compare')) compareQuery.set('compare', searchParams.get('compare') ?? '');
   return (
     <article className="detail-page">
       <Link to="/">← 返回搜尋</Link>
@@ -91,6 +106,15 @@ export function ListingDetailPage({
         </p>
       </header>
       <div className="personal-actions detail-actions">
+        {compareIds.includes(listing.id) ? (
+          <Link className="button-link" to={`/compare?${compareQuery.toString()}`}>
+            已加入比較（{compareIds.length}/4）
+          </Link>
+        ) : (
+          <Link className="button-link" to={`/compare?${compareQuery.toString()}`}>
+            加入房源比較（{compareIds.length}/4）
+          </Link>
+        )}
         <button type="button" onClick={() => void toggleFavorite(listing.id)}>
           {state?.favorite ? '已收藏' : '收藏'}
         </button>
@@ -125,6 +149,30 @@ export function ListingDetailPage({
           </div>
         ) : (
           <p>圖片未提供。</p>
+        )}
+      </section>
+      <section>
+        <h2>附近成交參考</h2>
+        <p>
+          依同縣市、行政區、交易類型、近五年及權狀坪數 ±20% 篩選；這是行政區參考，非距離排序或估價。
+        </p>
+        {comparables.length ? (
+          <ul className="timeline">
+            {comparables.slice(0, 10).map((transaction) => (
+              <li key={transaction.id}>
+                {transaction.transactionDate
+                  ? new Date(transaction.transactionDate).toLocaleDateString('zh-TW')
+                  : '日期未提供'}{' '}
+                · {transaction.address ?? '地址未提供'} · {transaction.buildingArea ?? '坪數未提供'}{' '}
+                坪 ·{' '}
+                {transaction.totalPrice === undefined
+                  ? '總價未提供'
+                  : `${transaction.totalPrice.toLocaleString()} 元`}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>目前沒有符合條件的成交資料。</p>
         )}
       </section>
       <section>

@@ -11,7 +11,7 @@ import { collectNewHousePages } from '../collectors/591-newhouse/collector';
 import { newHouseSourceConfig } from '../collectors/591-newhouse/config';
 import { normalizeNewHouse } from '../collectors/591-newhouse/normalizer';
 import type { Raw591NewHouseListing } from '../collectors/591-newhouse/types';
-import { moiConfig } from '../collectors/moi/config';
+import { assertMoiLiveDownloadEnabled, moiConfig } from '../collectors/moi/config';
 import { discoverCsvFiles, downloadMoiArchive } from '../collectors/moi/downloader';
 import { normalizeMoiArchive } from '../pipeline/moi';
 import { PRODUCTION_SCOPE } from '../scope/production';
@@ -168,6 +168,7 @@ async function collectLiveNewHouse(): Promise<BootstrapSourceResult> {
 
 async function collectLiveMoi(): Promise<BootstrapSourceResult> {
   try {
+    assertMoiLiveDownloadEnabled();
     const files = discoverCsvFiles(await downloadMoiArchive(moiConfig));
     return {
       sourceId: 'moi',
@@ -207,6 +208,8 @@ if (fixture) {
   ]);
   let presaleProjects = [];
   try {
+    if (!presaleRegistryConfig.liveDownloadEnabled)
+      throw new Error('LIVE_DOWNLOAD_PAUSED: MOI authorization not confirmed');
     presaleProjects = await collectPresaleProjects(
       presaleRegistryConfig.downloadUrl,
       fetch,

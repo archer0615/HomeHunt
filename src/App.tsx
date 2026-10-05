@@ -8,6 +8,7 @@ import { SearchPage } from './pages/SearchPage';
 import { ListingDetailPage } from './pages/ListingDetailPage';
 import { CollectionPage } from './pages/CollectionPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ComparePage } from './pages/ComparePage';
 import { PersonalStateProvider } from './personal-state/context';
 import './App.css';
 
@@ -65,6 +66,10 @@ function Application() {
         <Routes>
           <Route element={<AppLayout metadata={metadata} />}>
             <Route
+              path="*"
+              element={<SearchPage listings={dataset.listings} events={dataset.events} />}
+            />
+            <Route
               path="/"
               element={<SearchPage listings={dataset.listings} events={dataset.events} />}
             />
@@ -79,9 +84,11 @@ function Application() {
                   listings={dataset.listings}
                   histories={dataset.priceHistory}
                   events={dataset.events}
+                  transactions={dataset.transactions}
                 />
               }
             />
+            <Route path="/compare" element={<ComparePage listings={dataset.listings} />} />
             <Route
               path="/favorites"
               element={<CollectionPage title="收藏" listings={dataset.listings} mode="favorite" />}
@@ -93,10 +100,18 @@ function Application() {
             <Route
               path="/recent-price-drops"
               element={
-                <CollectionPage title="最近降價" listings={dataset.listings} mode="recent" />
+                <CollectionPage
+                  title="最近降價"
+                  listings={dataset.listings}
+                  events={dataset.events}
+                  mode="recent"
+                />
               }
             />
-            <Route path="/settings" element={<SettingsPage listings={dataset.listings} />} />
+            <Route
+              path="/settings"
+              element={<SettingsPage listings={dataset.listings} metadata={metadata} />}
+            />
           </Route>
         </Routes>
       </HashRouter>

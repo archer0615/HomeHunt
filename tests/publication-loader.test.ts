@@ -64,6 +64,7 @@ describe('publication loader', () => {
       const url = String(input);
       if (url.endsWith('/metadata.json')) return new Response(JSON.stringify(metadata));
       if (url.endsWith('/listings/all.json')) return new Response('[]');
+      if (url.endsWith('/transactions/all.json')) return new Response('[]');
       return new Response('');
     });
     await loadPublishedDataset(fetcher);

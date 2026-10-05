@@ -18,6 +18,8 @@ interface PersonalStateContextValue {
   toggleVisited: (id: string) => Promise<void>;
   exclude: (id: string) => Promise<void>;
   undoExclude: (id: string) => Promise<void>;
+  setTags: (id: string, tags: string[]) => Promise<void>;
+  restoreAll: (states: ListingPersonalState[]) => Promise<void>;
 }
 const Context = createContext<PersonalStateContextValue | undefined>(undefined);
 const defaultRepository = new PersonalStateRepository();
@@ -44,7 +46,7 @@ export function PersonalStateProvider({
   const update = useCallback(
     async (
       id: string,
-      patch: Partial<Pick<ListingPersonalState, 'favorite' | 'excluded' | 'visited'>>,
+      patch: Partial<Pick<ListingPersonalState, 'favorite' | 'excluded' | 'visited' | 'tags'>>,
     ) => {
       try {
         const next = await repository.set(id, patch);
@@ -67,8 +69,13 @@ export function PersonalStateProvider({
         update(id, { visited: !(states[id] ?? emptyPersonalState(id)).visited }),
       exclude: async (id: string) => update(id, { excluded: true }),
       undoExclude: async (id: string) => update(id, { excluded: false }),
+      setTags: async (id: string, tags: string[]) => update(id, { tags }),
+      restoreAll: async (items: ListingPersonalState[]) => {
+        await repository.replaceAll(items);
+        setStates(Object.fromEntries(items.map((item) => [item.listingId, item])));
+      },
     }),
-    [ready, states, error, update],
+    [ready, states, error, update, repository],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

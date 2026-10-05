@@ -1,10 +1,12 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { promoteArtifacts } from './promotion';
 
 const args = process.argv.slice(2);
 const index = args.indexOf('--run');
 const runId = index >= 0 ? args[index + 1] : undefined;
-if (!runId) throw new Error('Usage: npm run data:refresh:promote -- --run <runId>');
+if (!runId || !/^[\w-]+$/.test(runId))
+  throw new Error('Usage: npm run data:refresh:promote -- --run <runId>');
 
 const root = path.resolve('data');
 const candidate = path.join(root, 'refresh-candidates', runId);
@@ -24,35 +26,24 @@ await fs.rm(dbStage, { force: true });
 await fs.rm(publicationStage, { recursive: true, force: true });
 await fs.copyFile(sourceDb, dbStage);
 await fs.cp(sourcePublication, publicationStage, { recursive: true });
-const oldDb = `${targetDb}.previous-${runId}`;
-const oldPublication = `${targetPublication}.previous-${runId}`;
-try {
-  await fs.rm(oldDb, { force: true });
-  await fs.rm(oldPublication, { recursive: true, force: true });
-  try {
-    await fs.rename(targetDb, oldDb);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-  }
-  try {
-    await fs.rename(targetPublication, oldPublication);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-  }
-  await fs.rename(dbStage, targetDb);
-  await fs.rename(publicationStage, targetPublication);
-  await fs.rm(oldDb, { force: true });
-  await fs.rm(oldPublication, { recursive: true, force: true });
-  console.log(
-    JSON.stringify({
-      runId,
-      promoted: true,
-      appDataVersion: metadata.appDataVersion,
-      counts: metadata.counts,
-    }),
-  );
-} catch (error) {
-  await fs.rm(dbStage, { force: true });
-  await fs.rm(publicationStage, { recursive: true, force: true });
-  throw error;
-}
+await promoteArtifacts([
+  {
+    stage: dbStage,
+    target: targetDb,
+    backup: `${targetDb}.previous-${runId}`,
+  },
+  {
+    stage: publicationStage,
+    target: targetPublication,
+    backup: `${targetPublication}.previous-${runId}`,
+    recursive: true,
+  },
+]);
+console.log(
+  JSON.stringify({
+    runId,
+    promoted: true,
+    appDataVersion: metadata.appDataVersion,
+    counts: metadata.counts,
+  }),
+);

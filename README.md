@@ -16,7 +16,7 @@
 npm run local
 ```
 
-請使用 Chrome 開啟 `http://localhost:4173`。Windows 排程可每日 20:20 執行本機資料更新；詳細方式請參閱 [本機使用](docs/local-only.md)。
+請使用 Chrome 開啟 `http://localhost:4173`。Windows 每日 20:20 候選更新排程目前已停用，待確認來源授權後再啟用；詳細方式請參閱 [本機使用](docs/local-only.md)。
 
 ## Phase 1 Scope
 

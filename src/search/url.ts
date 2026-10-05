@@ -59,3 +59,39 @@ export function criteriaToSearch(criteria: SearchCriteria): string {
   if (criteria.buildingTypes?.length) p.set('buildingTypes', criteria.buildingTypes.join(','));
   return p.toString();
 }
+
+export interface SearchPreset {
+  name: string;
+  query: string;
+}
+
+const SEARCH_PRESETS_KEY = 'homehunt-search-presets-v1';
+
+export function loadSearchPresets(
+  storage: Pick<Storage, 'getItem'> = localStorage,
+): SearchPreset[] {
+  try {
+    const value: unknown = JSON.parse(storage.getItem(SEARCH_PRESETS_KEY) ?? '[]');
+    if (!Array.isArray(value)) return [];
+    return value.filter(
+      (item): item is SearchPreset =>
+        item !== null &&
+        typeof item === 'object' &&
+        typeof item.name === 'string' &&
+        typeof item.query === 'string',
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function saveSearchPresets(
+  presets: SearchPreset[],
+  storage: Pick<Storage, 'setItem'> = localStorage,
+): void {
+  try {
+    storage.setItem(SEARCH_PRESETS_KEY, JSON.stringify(presets));
+  } catch {
+    /* Presets are optional when browser storage is unavailable. */
+  }
+}
